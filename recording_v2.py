@@ -12,10 +12,10 @@ class EmgSession:
     def __init__(self):
         self.socket_handler = SocketHandler(Config.IP_ADDRESS, Config.TCP_PORT)
         self.socket_handler.connect()
+        self.is_recording = False
         self.conf_string = None
         self.tot_num_byte = None
         self.tot_num_chan = None
-        self.recording = False
         self.start()
 
     def start(self):
@@ -49,17 +49,17 @@ class EmgSession:
 
     def emg_recording(self, rec_time, movement, rep):
         """ Make a single EMG recording"""
-
         print(f"Recording for movement {movement} rep {rep}")
+        rep_start_time = time.time()
         data = np.zeros((self.tot_num_chan + 1, Config.SAMPLE_FREQUENCY * rec_time))
         block_data = self.tot_num_byte * Config.SAMPLE_FREQUENCY * rec_time
 
         chan_ready = 1
         data_buffer = b""  # Buffer to store the received data
 
-        chunk_size = 512
+        chunk_size = 512  # Adjust based on performance
         loop_start_time = time.time()
-        self.recording = True
+
         while len(data_buffer) < block_data:
             remaining_data = block_data - len(data_buffer)
             buffer_size = min(chunk_size, remaining_data)
@@ -68,8 +68,8 @@ class EmgSession:
             if not data_temp:
                 break
             data_buffer += data_temp
+
         print(f"Elapsed time for receiving data: {time.time() - loop_start_time:.2f} seconds")
-        self.recording = False
 
         print("Data packet ready: " + str(len(data_buffer)))
 
@@ -117,15 +117,4 @@ class EmgSession:
         del data_sub_matrix
         gc.collect()
 
-
-    def receive_and_ignore(self, duration):
-        print("Ignoring")
-        end_time = time.time() + duration
-        while self.recording:
-            time.sleep(0.05)
-        while time.time() < end_time:
-            data = self.socket_handler.receive(1024)
-            if not data:
-                break
-        print("Done ignoring")
 

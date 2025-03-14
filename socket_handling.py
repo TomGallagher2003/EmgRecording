@@ -15,6 +15,7 @@ class SocketHandler:
         for i in range(retries):
             try:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 self.socket.connect((self.ip, self.port))
                 print("Connected to Socket!")
                 self.socket.settimeout(20)
@@ -53,3 +54,10 @@ class SocketHandler:
         except socket.error as msg:
             print(msg)
             return None
+
+    def flush(self):
+        """Flush any residual data in the buffer"""
+        while True:
+            data = self.socket.recv(4096)
+            if not data:
+                break

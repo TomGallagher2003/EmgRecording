@@ -6,11 +6,11 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 
-def plot_folder(folder_path, display_time=5):
+def plot_movement(movement, folder_path, display_time=5):
     """
     Loops through all CSV files in a folder, displaying each for a given number of seconds.
     """
-    files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+    files = [f for f in os.listdir(folder_path) if f.endswith('.csv') and f'M{movement}' in f]
     print(files)
 
     for i, file in enumerate(files):
@@ -26,7 +26,7 @@ def plot_folder(folder_path, display_time=5):
 
         plt.xlabel("Time (samples)")
         plt.ylabel("Amplitude")
-        plt.title(f"EMG Data Plot: Movement {i+1}")
+        plt.title(f"EMG Data Plot: Movement {movement}, Repetition {i+1}")
 
         plt.pause(0.5)
         plt.draw()
@@ -37,4 +37,4 @@ def plot_folder(folder_path, display_time=5):
 
 if __name__ == '__main__':
 
-    plot_folder("emg_data", 3)
+    plot_movement(1, "emg_data", 3)
