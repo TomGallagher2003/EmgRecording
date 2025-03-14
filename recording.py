@@ -71,7 +71,7 @@ class EmgSession:
         print(f"Elapsed time for receiving data: {time.time() - loop_start_time:.2f} seconds")
         self.recording = False
 
-        print("Data packet ready: " + str(len(data_buffer)))
+        print("Successful recording: " + str(len(data_buffer)))
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (Config.SAMPLE_FREQUENCY * rec_time, self.tot_num_byte)).T
@@ -124,8 +124,8 @@ class EmgSession:
         while self.recording:
             time.sleep(0.05)
         while time.time() < end_time:
-            data = self.socket_handler.receive(1024)
-            if not data:
-                break
-        print("Done ignoring")
+            if not self.recording:
+                data = self.socket_handler.receive(1024)
+                if not data:
+                    break
 

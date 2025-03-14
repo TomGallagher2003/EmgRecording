@@ -1,16 +1,13 @@
-import gc
+
 import time
 import tkinter as tk
-from datetime import datetime
 
-import numpy as np
 from PIL import Image, ImageTk
 import threading
-from config import Config
 from recording import EmgSession
 
-perform_time = 1  # seconds to perform one movement
-rest_time = 4  # seconds to rest between movements
+perform_time = 2  # seconds to perform one movement
+rest_time = 5  # seconds to rest between movements
 num_repeats = 10  # number of repeats for each movement
 
 # List of movement image filenames

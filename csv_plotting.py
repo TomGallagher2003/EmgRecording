@@ -19,7 +19,6 @@ def plot_movement(movement, folder_path, display_time=5):
         data = np.loadtxt(file_path, delimiter=',')
 
         plt.clf()
-
         # Plot each channel
         for j in range(data.shape[0]):
             plt.plot(data[j], label=f'Channel {j + 1}')
@@ -27,6 +26,7 @@ def plot_movement(movement, folder_path, display_time=5):
         plt.xlabel("Time (samples)")
         plt.ylabel("Amplitude")
         plt.title(f"EMG Data Plot: Movement {movement}, Repetition {i+1}")
+
 
         plt.pause(0.5)
         plt.draw()
