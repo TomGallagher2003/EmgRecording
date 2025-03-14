@@ -10,11 +10,17 @@ class Config:
     # Configuration for muovi 1
     DEVICE_EN = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     EMG = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    MODE = [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    MODE = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     NUM_CHAN = [38, 38, 38, 38, 70, 70, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     SAMPLE_FREQUENCY = 2000
     DATA_DESTINATION_PATH = "./emg_data"
     IMAGE_SOURCE_PATH = "./movement_library/EA"
+
+
+    # These channle lists are determined in configuration processing but are defined here to simplify plotting
+    MUOVI_EMG_CHANNELS = list(range(1, 33))
+    MUOVI_AUX_CHANNELS = list(range(33,39))
+    SYNCSTATION_CHANNELS = list(range(39, 45))
 
     PLOT = False

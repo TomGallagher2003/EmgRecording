@@ -3,6 +3,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+from config import Config
 matplotlib.use('TkAgg')
 
 
@@ -19,13 +20,15 @@ def plot_movement(movement, folder_path, display_time=5):
         data = np.loadtxt(file_path, delimiter=',')
 
         plt.clf()
-        # Plot each channel
-        for j in range(data.shape[0]):
+        # Plot Muovi EMG Channels only
+        #for j in Config.MUOVI_EMG_CHANNELS:
+        for j in range(1,2):
             plt.plot(data[j], label=f'Channel {j + 1}')
 
         plt.xlabel("Time (samples)")
         plt.ylabel("Amplitude")
         plt.title(f"EMG Data Plot: Movement {movement}, Repetition {i+1}")
+        plt.ylim((0, 10**9 * 9))
 
 
         plt.pause(0.5)
