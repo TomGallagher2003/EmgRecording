@@ -131,7 +131,6 @@ class ExerciseApp:
 
     def run_cycle(self):
         """Run the full exercise cycle."""
-        print("cycle called")
         if self.start_time is None:
             self.start_time = time.time()
             self.running = True

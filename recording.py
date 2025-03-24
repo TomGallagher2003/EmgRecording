@@ -117,13 +117,9 @@ class EmgSession:
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
 
         # data = data[Config.MUOVI_EMG_CHANNELS]
-        labels = np.where(get_movement_mask(data.shape[0], 10, 15) == 1, movement, 0)
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_dataD_M{movement}R{rep}.csv", data, delimiter=',')
-        with h5py.File(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.h5", 'w') as hf:
-            # Save data into the file with 'data' as the key
-            hf.create_dataset('emg_data', data=data.transpose())
-            hf.create_dataset('labels', data=labels)
-        # np.savetxt(Config.LABEL_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
+        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", data, delimiter=',')
+
+
         #del ind
         del data_sub_matrix
         gc.collect()
