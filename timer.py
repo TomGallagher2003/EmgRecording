@@ -1,15 +1,17 @@
+
 import time
 import tkinter as tk
-from PIL import Image, ImageTk
 
-# Configuration variables
-perform_time = 1  # seconds to perform one movement
-rest_time = 6     # seconds to rest between movements
-num_repeats = 5   # number of repeats for each movement
+from PIL import Image, ImageTk
+import threading
+from recording import EmgSession
+
+perform_time = 2  # seconds to perform one movement
+rest_time = 2  # seconds to rest between movements
+num_repeats = 3  # number of repeats for each movement
 
 # List of movement image filenames
 movement_images = [
-    
     "movement_library/EA/Index_flexion_M1.png",
     "movement_library/EA/Index_Extension_M2.png",
     "movement_library/EA/Middle_Flexion_M3.png",
@@ -26,6 +28,7 @@ movement_images = [
 
 # Rest image filename
 rest_image = "movement_library/Rest_M0.png"
+
 
 class ExerciseApp:
     def __init__(self, root):
@@ -60,10 +63,12 @@ class ExerciseApp:
         self.index_label.pack()
 
         # Buttons for Stop and Resume
-        self.stop_button = tk.Button(self.right_frame, text="Stop", font=("Helvetica", 16), fg="black", bg="red", command=self.stop_exercise)
+        self.stop_button = tk.Button(self.right_frame, text="Stop", font=("Helvetica", 16), fg="black", bg="red",
+                                     command=self.stop_exercise)
         self.stop_button.pack(pady=10)
 
-        self.resume_button = tk.Button(self.right_frame, text="Resume", font=("Helvetica", 16), fg="black", bg="green", command=self.resume_exercise)
+        self.resume_button = tk.Button(self.right_frame, text="Resume", font=("Helvetica", 16), fg="black", bg="green",
+                                       command=self.resume_exercise)
         self.resume_button.pack(pady=10)
 
         # State variables
@@ -78,7 +83,13 @@ class ExerciseApp:
         # Flags to indicate where the exercise was paused
         self.after_last_repeat = False
 
+        # New fields for emg recording
+        self.recorder = EmgSession()
+
+        # Start the EMG recording in a separate thread
+        movement, repetition = self.current_index + 1, self.current_repeat + 1
         self.run_cycle()
+
 
     def get_variables_text(self):
         """Return a formatted string displaying the variables."""
@@ -120,6 +131,7 @@ class ExerciseApp:
 
     def run_cycle(self):
         """Run the full exercise cycle."""
+        print("cycle called")
         if self.start_time is None:
             self.start_time = time.time()
             self.running = True
@@ -129,6 +141,7 @@ class ExerciseApp:
             if self.current_repeat == 0 and not self.after_last_repeat:
                 # Initial 5s rest before starting the movement
                 self.show_image(rest_image)
+                threading.Thread(target=self.delay_emg_start, daemon=True).start()
                 self.next_image_label.config(image='')  # Clear the next image
                 self.countdown(5, self.start_movement)
             elif self.after_last_repeat:
@@ -136,7 +149,7 @@ class ExerciseApp:
                 self.after_last_repeat = False
                 self.current_repeat = 0
                 self.current_index += 1
-                self.run_cycle()
+                self.run_cycle()  # Ensure this is called here
             else:
                 self.start_movement()
         else:
@@ -147,10 +160,11 @@ class ExerciseApp:
 
     def start_movement(self):
         """Start the movement and handle repeats."""
-        if self.current_repeat < num_repeats:
+        if self.current_repeat < num_repeats - 1:
             self.show_image(movement_images[self.current_index])
             self.update_index(self.current_index, self.current_repeat)
-            
+            threading.Thread(target=self.record_emg, daemon=True).start()
+
             if self.current_repeat == num_repeats - 1:  # Last repeat
                 next_index = (self.current_index + 1) % len(movement_images)
                 self.show_next_image(movement_images[next_index])
@@ -166,12 +180,14 @@ class ExerciseApp:
         """Rest between repeats."""
         self.current_repeat += 1
         self.show_image(rest_image)
+        # threading.Thread(target=self.ignore_data, daemon=True).start()
         self.countdown(rest_time, self.start_movement)
 
     def final_rest(self):
         """Final 5s rest after last repeat of a movement."""
         self.show_image(rest_image)
         self.countdown(5, self.pause_cycle)
+        self.after_last_repeat = True
 
     def countdown(self, duration, callback):
         """Display the countdown and execute callback after."""
@@ -207,6 +223,19 @@ class ExerciseApp:
         self.update_index("All", "Complete")
         self.time_label.config(text="")
         self.runtime_label.config(text=f"Total Runtime: {int(time.time() - self.start_time)} seconds")
+
+    def record_emg(self):
+        """record EMG data."""
+        self.recorder.emg_recording(perform_time + rest_time, self.current_index + 1, self.current_repeat + 1)
+
+    def ignore_data(self):
+        """record EMG data."""
+        self.recorder.receive_and_ignore(rest_time)
+
+    def delay_emg_start(self):
+        """record EMG data."""
+        self.recorder.receive_and_ignore(5)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
