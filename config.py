@@ -15,6 +15,7 @@ class Config:
     NUM_CHAN = [38, 38, 38, 38, 70, 70, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     SAMPLE_FREQUENCY = 2000
     DATA_DESTINATION_PATH = "./emg_data"
+    LABEL_DESTINATION_PATH = "./labels"
     IMAGE_SOURCE_PATH = "./movement_library/EA"
 
 

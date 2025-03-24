@@ -2,8 +2,11 @@ import gc
 import struct
 import numpy as np
 import time
+import h5py
 
 from configuration_processing import calculate_crc8, validate_config, process_config
+from movement_seperation import get_movement_mask
+# from movement_seperation import get_movement_mask
 from socket_handling import SocketHandler
 from config import Config
 
@@ -81,7 +84,7 @@ class EmgSession:
             if Config.DEVICE_EN[DevId] == 1:
                 if Config.EMG[DevId] == 1:
                     ch_ind = np.arange(0, Config.NUM_CHAN[DevId] * 2, 2)
-                    data_sub_matrix = temp[ch_ind].astype(np.uint32) * 256 + temp[ch_ind + 1].astype(np.uint32)
+                    data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
 
                     # Search for the negative values and make the two's complement
                     ind = np.where(data_sub_matrix >= 32768)
@@ -105,15 +108,23 @@ class EmgSession:
 
         aux_starting_byte = self.tot_num_byte - (6 * 2)
         ch_ind = np.arange(aux_starting_byte, aux_starting_byte + 12, 2)
-        data_sub_matrix = temp[ch_ind].astype(np.uint32) * 256 + temp[ch_ind + 1].astype(np.uint32)
+        data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
 
         # Search for the negative values and make the two's complement
         ind = np.where(data_sub_matrix >= 32768)
         data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", data, delimiter=',')
-        del ind
+
+        # data = data[Config.MUOVI_EMG_CHANNELS]
+        labels = np.where(get_movement_mask(data.shape[0], 10, 15) == 1, movement, 0)
+        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_dataD_M{movement}R{rep}.csv", data, delimiter=',')
+        with h5py.File(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.h5", 'w') as hf:
+            # Save data into the file with 'data' as the key
+            hf.create_dataset('emg_data', data=data.transpose())
+            hf.create_dataset('labels', data=labels)
+        # np.savetxt(Config.LABEL_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
+        #del ind
         del data_sub_matrix
         gc.collect()
 
