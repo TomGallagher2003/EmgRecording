@@ -4,6 +4,7 @@ import numpy as np
 import time
 import h5py
 
+from channel_alignment import simple_alignment
 from configuration_processing import calculate_crc8, validate_config, process_config
 from movement_seperation import get_movement_mask
 # from movement_seperation import get_movement_mask
@@ -19,6 +20,7 @@ class EmgSession:
         self.tot_num_byte = None
         self.tot_num_chan = None
         self.recording = False
+        self.emg_channels = None
         self.start()
 
     def start(self):
@@ -28,7 +30,7 @@ class EmgSession:
         validate_config(Config.MODE, 3, "Error, set Mode values between to 0 and 3")
 
         # Process the configuration to get the configuration string and other required fields
-        self.conf_string, conf_str_len, sync_stat_chan, self.tot_num_chan, self.tot_num_byte, plotting_info = (
+        self.conf_string, conf_str_len, self.emg_channels, self.tot_num_chan, self.tot_num_byte, plotting_info = (
             process_config(Config.DEVICE_EN, Config.EMG, Config.MODE, Config.NUM_CHAN))
 
         # Send the configuration to syncstation
@@ -50,47 +52,64 @@ class EmgSession:
         data_sent = self.socket_handler.send(packed_data)
         self.socket_handler.close()
 
-    def emg_recording(self, rec_time, movement, rep):
+    def emg_recording(self, perform_time, rest_time, movement, rep):
         """ Make a single EMG recording"""
-
-        print(f"Recording for movement {movement} rep {rep}")
+        rec_time = perform_time + rest_time
+        print(f"Recording for movement {movement} rep {rep} ({rec_time} seconds)")
+        total_samples = Config.SAMPLE_FREQUENCY * rec_time
+        expected_bytes = self.tot_num_byte * total_samples
         data = np.zeros((self.tot_num_chan + 1, Config.SAMPLE_FREQUENCY * rec_time))
-        block_data = self.tot_num_byte * Config.SAMPLE_FREQUENCY * rec_time
 
         chan_ready = 1
         data_buffer = b""  # Buffer to store the received data
 
         chunk_size = 512
-        loop_start_time = time.time()
+        start_time = time.time()
         self.recording = True
-        while len(data_buffer) < block_data:
-            remaining_data = block_data - len(data_buffer)
-            buffer_size = min(chunk_size, remaining_data)
-            data_temp = self.socket_handler.receive(buffer_size)
 
+        while time.time() - start_time < rec_time:
+            data_temp = self.socket_handler.receive(chunk_size)
             if not data_temp:
                 break
             data_buffer += data_temp
-        print(f"Elapsed time for receiving data: {time.time() - loop_start_time:.2f} seconds")
-        self.recording = False
 
-        print("Successful recording: " + str(len(data_buffer)))
+        self.recording = False
+        print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
+        print("Total bytes received:", len(data_buffer))
+
+        offset = simple_alignment(data_buffer)
+        if offset != 0:
+            data_buffer = data_buffer[:-offset]
+        print(f"Offset: {offset}")
+        sample_size = 88
+        remainder = len(data_buffer) % sample_size
+        if remainder != 0:
+            data_buffer = data_buffer[remainder:]
+
+        if len(data_buffer) >= expected_bytes:
+            data_buffer = data_buffer[-expected_bytes:]
+        else:
+            print("Warning: received less data than expected")
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
-        temp = np.reshape(temp_array, (Config.SAMPLE_FREQUENCY * rec_time, self.tot_num_byte)).T
+        temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
 
         # Processing data
         for DevId in range(16):
             if Config.DEVICE_EN[DevId] == 1:
                 if Config.EMG[DevId] == 1:
-                    ch_ind = np.arange(0, Config.NUM_CHAN[DevId] * 2, 2)
+                    ch_ind = np.arange(0, 33 * 2, 2)
+                    ch_ind_aux = np.arange(33*2, 38 * 2, 2)
                     data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
+                    data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 256 + temp[ch_ind_aux + 1].astype(np.int32)
 
-                    # Search for the negative values and make the two's complement
+                    # Search for the negative values and make the two's complement (not on aux)
                     ind = np.where(data_sub_matrix >= 32768)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
-                    data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
+                    data[chan_ready:chan_ready + 33, :] = data_sub_matrix
+                    data[chan_ready+33:chan_ready + 38, :] = data_sub_matrix_aux
+
                 else:
                     ch_ind = np.arange(0, Config.NUM_CHAN[DevId] * 3, 3)
                     data_sub_matrix = temp[ch_ind] * 65536 + temp[ch_ind + 1] * 256 + temp[ch_ind + 2]
@@ -109,16 +128,19 @@ class EmgSession:
         aux_starting_byte = self.tot_num_byte - (6 * 2)
         ch_ind = np.arange(aux_starting_byte, aux_starting_byte + 12, 2)
         data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
-
         # Search for the negative values and make the two's complement
-        ind = np.where(data_sub_matrix >= 32768)
-        data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
+        # ind = np.where(data_sub_matrix >= 32768)
+        # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
+        emg_data = data[Config.MUOVI_EMG_CHANNELS]
+        mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
+        syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
+        labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
 
-        # data = data[Config.MUOVI_EMG_CHANNELS]
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", data, delimiter=',')
-
+        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", emg_data, delimiter=',')
+        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
+        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
 
         #del ind
         del data_sub_matrix

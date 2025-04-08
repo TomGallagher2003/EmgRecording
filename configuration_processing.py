@@ -118,7 +118,7 @@ def process_config(DeviceEN, EMG, Mode, NumChan):
     print(f"Total Number of Channels (tot_num_chan): {tot_num_chan}")
     print(f"Total Number of Bytes (tot_num_byte): {tot_num_byte}")
     print(f"Plotting Information (plotting_info): {plotting_info}")
-    return (conf_string, conf_str_len, sync_stat_chan, tot_num_chan, tot_num_byte,
+    return (conf_string, conf_str_len, muovi_emg_chan, tot_num_chan, tot_num_byte,
             plotting_info)
 
 
