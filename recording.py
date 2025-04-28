@@ -171,9 +171,8 @@ class EmgSession:
         del data_sub_matrix
         gc.collect()
 
-
-    def receive_and_ignore(self, duration):
-        print("Ignoring")
+    def receive_and_ignore(self, duration, no_print=False):
+        if not no_print: print("Ignoring")
         end_time = time.time() + duration
         while self.recording:
             time.sleep(0.05)
