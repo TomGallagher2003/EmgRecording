@@ -72,7 +72,7 @@ class ExerciseApp:
         )
         self.index_label.pack()
 
-        # Pause and Resume buttons
+        # Pause, Resume, and Stop buttons
         self.pause_button = tk.Button(
             self.right_frame,
             text="Pause",
@@ -90,6 +90,15 @@ class ExerciseApp:
             bg="green",
             command=self.resume_exercise
         )
+        # Stop button to end session when paused
+        self.stop_button = tk.Button(
+            self.right_frame,
+            text="Stop Session",
+            font=("Helvetica", 16),
+            fg="white",
+            bg="black",
+            command=self.stop_session
+        )
 
         # State variables
         self.current_index = 0
@@ -106,8 +115,8 @@ class ExerciseApp:
         self.run_cycle()
 
     def get_variables_text(self):
-        return (f"Perform Time: {perform_time} seconds\n"
-                f"Rest Time: {rest_time} seconds\n"
+        return (f"Perform Time: {perform_time} seconds\n"  
+                f"Rest Time: {rest_time} seconds\n"   
                 f"Number of Repeats: {num_repeats}")
 
     def show_image(self, path):
@@ -218,10 +227,6 @@ class ExerciseApp:
         else:
             self.resume_button.config(state='normal', text="Resume", bg="green")
 
-    def pause_cycle(self):
-        self.after_last_repeat = True
-        self.paused = True
-
     def stop_exercise(self):
         self.paused = True
         self.current_repeat = 0
@@ -231,13 +236,14 @@ class ExerciseApp:
         self.show_image(rest_image)
         self.show_next_image(movement_images[self.current_index])
         self.index_label.config(
-            text=f"Press Resume to restart movement {self.current_index+1}"
+            text=f"Press Resume or Stop Session"
         )
         self.time_label.config(text="")
 
-        # toggle buttons and start disabled grey resume with countdown
+        # toggle buttons: hide pause, show resume and stop
         self.pause_button.pack_forget()
         self.resume_button.pack(pady=10)
+        self.stop_button.pack(pady=10)
         self.countdown_resume(movement_delay)
 
         # start continuous flushing while paused
@@ -249,6 +255,7 @@ class ExerciseApp:
 
             # restore UI and buttons
             self.resume_button.pack_forget()
+            self.stop_button.pack_forget()
             self.pause_button.pack(pady=10)
             self.show_image(rest_image)
             self.show_next_image(movement_images[self.current_index])
@@ -262,6 +269,11 @@ class ExerciseApp:
                 daemon=True
             ).start()
             self.countdown(5, self.start_movement)
+
+    def stop_session(self):
+        # finish EMG recording and close app
+        self.recorder.finish()
+        self.root.destroy()
 
     def end_session(self):
         self.update_index("All", "Complete")
@@ -282,8 +294,8 @@ class ExerciseApp:
         self.recorder.record_initial_rest(movement_delay, self.current_index+1)
 
     def clear_initial(self):
-        time.sleep(0.3)
-        self.recorder.receive_and_ignore(1)
+        time.sleep(0.5)
+        self.recorder.receive_and_ignore(0.4)
 
 
 if __name__ == "__main__":

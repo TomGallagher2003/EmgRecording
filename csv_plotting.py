@@ -7,11 +7,13 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-def plot_movement(folder_path, display_time=7):
+def plot_movement(folder_path, display_time=7, show_rest=False):
     """
     Loops through all CSV files in a folder, displaying each for a given number of seconds.
     """
     files = [f for f in os.listdir(folder_path) if f.endswith('.csv') and f'emg' in f]
+    if not show_rest:
+        files = [f for f in files if not f.endswith('rest.csv')]
 
 
     for i, file in enumerate(files):
@@ -22,7 +24,7 @@ def plot_movement(folder_path, display_time=7):
 
         plt.clf()
         fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
-        fig.suptitle(f'fi le: {file}', fontsize=16)
+        fig.suptitle(f'file: {file}', fontsize=16)
 
         for j, emg_signal in enumerate(data):
             axes[j].set_ylim(-2000, 2000)
@@ -44,4 +46,4 @@ def plot_movement(folder_path, display_time=7):
 
 if __name__ == '__main__':
 
-    plot_movement("emg_data", 6)
+    plot_movement("emg_data", 8, show_rest=False)

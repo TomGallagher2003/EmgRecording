@@ -59,7 +59,7 @@ class EmgSession:
     def record_initial_rest(self, rest_time, movement):
         """ Make a single EMG recording for the rest period before a movement"""
         print(f"Recording initial rest for movement {movement} ({rest_time} seconds)")
-        self.record(False, rest_time, movement)
+        self.record(False, rest_time, movement, save_h5=True)
 
     def record(self, is_movement, rest_time, movement, perform_time=0, rep=None, save_h5=False):
         """ Make a single EMG recording"""
@@ -104,6 +104,7 @@ class EmgSession:
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
+
 
         # Processing data
         for DevId in range(16):
