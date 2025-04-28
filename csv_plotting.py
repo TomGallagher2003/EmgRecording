@@ -22,7 +22,7 @@ def plot_movement(folder_path, display_time=7):
 
         plt.clf()
         fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
-        fig.suptitle(f'file: {file}', fontsize=16)
+        fig.suptitle(f'fi le: {file}', fontsize=16)
 
         for j, emg_signal in enumerate(data):
             axes[j].set_ylim(-2000, 2000)

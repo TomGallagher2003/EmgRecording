@@ -84,7 +84,7 @@ class ExerciseApp:
 
         # New fields for emg recording
         self.recorder = EmgSession()
-        threading.Thread(target=self.clear_initial, daemon=True).start()
+        threading.Thread(target=self.clear_initial(), daemon=True).start()
 
         # Start the EMG recording in a separate thread (for the first movement)
         self.run_cycle()
@@ -140,7 +140,7 @@ class ExerciseApp:
                 self.show_image(rest_image)
                 self.show_next_image(movement_images[self.current_index])
                 self.index_label.config(text=f"Resting before movement {self.current_index + 1}")
-                threading.Thread(target=self.clear_initial, daemon=True).start()
+                threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
 
                 self.countdown(5, self.start_movement)
             elif self.after_last_repeat:
@@ -237,7 +237,10 @@ class ExerciseApp:
         """Clear stale data."""
         time.sleep(0.2)
 
-        self.recorder.receive_and_ignore(movement_delay-2)
+        self.recorder.receive_and_ignore(1)
+    def record_rest_before_movement(self):
+        """Clear stale data."""
+        self.recorder.record_initial_rest(movement_delay, self.current_index + 1)
 
 
 if __name__ == "__main__":

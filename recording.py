@@ -53,9 +53,20 @@ class EmgSession:
         self.socket_handler.close()
 
     def emg_recording(self, perform_time, rest_time, movement, rep):
+        """ Make a single EMG recording for the movement and following rest"""
+        print(f"Recording for movement {movement} rep {rep} ({perform_time + rest_time} seconds)")
+        self.record(True, rest_time, movement, perform_time=perform_time, rep=rep, save_h5=True)
+    def record_initial_rest(self, rest_time, movement):
+        """ Make a single EMG recording for the rest period before a movement"""
+        print(f"Recording initial rest for movement {movement} ({rest_time} seconds)")
+        self.record(False, rest_time, movement)
+
+    def record(self, is_movement, rest_time, movement, perform_time=0, rep=None, save_h5=False):
         """ Make a single EMG recording"""
-        rec_time = perform_time + rest_time
-        print(f"Recording for movement {movement} rep {rep} ({rec_time} seconds)")
+        if is_movement: rec_time = perform_time + rest_time
+        else: rec_time = rest_time
+
+
         total_samples = Config.SAMPLE_FREQUENCY * rec_time
         expected_bytes = self.tot_num_byte * total_samples
         data = np.zeros((self.tot_num_chan + 1, Config.SAMPLE_FREQUENCY * rec_time))
@@ -137,10 +148,24 @@ class EmgSession:
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
+        if is_movement:
 
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", emg_data, delimiter=',')
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
-        np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", emg_data, delimiter=',')
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
+            if save_h5:
+                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}R{rep}.h5", 'w') as hf:
+                    hf.create_dataset('emg_data', data=emg_data.transpose())
+                    hf.create_dataset("label", data=labels)
+        else:
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}rest.csv", emg_data, delimiter=',')
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}rest.csv", labels, delimiter=',')
+            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}rest.csv", mouvi_sample_counter,
+                       delimiter=',')
+            if save_h5:
+                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}rest.h5", 'w') as hf:
+                    hf.create_dataset('emg_data', data=emg_data.transpose())
+                    hf.create_dataset("label", data=labels)
 
         #del ind
         del data_sub_matrix
