@@ -5,12 +5,8 @@ from pathlib import Path
 import numpy as np
 import time
 import h5py
-import os
-
 from channel_alignment import simple_alignment
 from configuration_processing import calculate_crc8, validate_config, process_config
-from movement_seperation import get_movement_mask
-# from movement_seperation import get_movement_mask
 from socket_handling import SocketHandler
 from config import Config
 
