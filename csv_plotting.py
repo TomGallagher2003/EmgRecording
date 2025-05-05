@@ -15,7 +15,6 @@ def plot_movement(folder_path, display_time=7, show_rest=False):
     if not show_rest:
         files = [f for f in files if not f.endswith('rest.csv')]
 
-
     for i, file in enumerate(files):
         file_path = os.path.join(folder_path, file)
 
@@ -47,4 +46,4 @@ def plot_movement(folder_path, display_time=7, show_rest=False):
 
 if __name__ == '__main__':
 
-    plot_movement("emg_data/csv", 8, show_rest=False)
+    plot_movement("emg_data/csv", 8, show_rest=True)

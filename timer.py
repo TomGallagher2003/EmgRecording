@@ -109,8 +109,9 @@ class ExerciseApp:
 
         # EMG recorder
         self.recorder = EmgSession()
+        time.sleep(0.5)
         threading.Thread(target=self.clear_initial, daemon=True).start()
-
+        time.sleep(0.5)
         # Start application
         self.run_cycle()
 
@@ -287,8 +288,8 @@ class ExerciseApp:
         self.recorder.record_initial_rest(movement_delay, self.current_index+1)
 
     def clear_initial(self):
-        time.sleep(0.5)
-        self.recorder.receive_and_ignore(0.4)
+        for i in range(5):
+            self.recorder.receive_and_ignore(0.1)
 
 
 if __name__ == "__main__":
