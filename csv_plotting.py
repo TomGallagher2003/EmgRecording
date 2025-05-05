@@ -20,6 +20,7 @@ def plot_movement(folder_path, display_time=7, show_rest=False):
         file_path = os.path.join(folder_path, file)
 
         data = np.loadtxt(file_path, delimiter=',')
+        data = data.transpose()
 
 
         plt.clf()
@@ -46,4 +47,4 @@ def plot_movement(folder_path, display_time=7, show_rest=False):
 
 if __name__ == '__main__':
 
-    plot_movement("emg_data", 8, show_rest=False)
+    plot_movement("emg_data/csv", 8, show_rest=False)

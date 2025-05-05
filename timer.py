@@ -198,13 +198,6 @@ class ExerciseApp:
         )
         self.countdown(rest_time, self.start_movement)
 
-    def final_rest(self):
-        self.show_image(rest_image)
-        self.show_next_image(movement_images[self.current_index])
-        self.index_label.config(text="Final rest before next movement")
-        self.countdown(5, self.pause_cycle)
-        self.after_last_repeat = True
-
     def countdown(self, duration, callback):
         if duration > 0 and not self.paused:
             self.update_time(duration)

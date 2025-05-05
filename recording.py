@@ -1,8 +1,11 @@
 import gc
 import struct
+from pathlib import Path
+
 import numpy as np
 import time
 import h5py
+import os
 
 from channel_alignment import simple_alignment
 from configuration_processing import calculate_crc8, validate_config, process_config
@@ -149,24 +152,25 @@ class EmgSession:
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
-        if is_movement:
+        destination_path = Path(Config.DATA_DESTINATION_PATH)
 
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", emg_data, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
+        if is_movement:
+            np.savetxt(destination_path / "csv" / f"emg_data_M{movement}R{rep}.csv", emg_data.transpose(), delimiter=',')
+            np.savetxt(destination_path / "csv" / f"label_M{movement}R{rep}.csv", labels.transpose(), delimiter=',')
+            # np.savetxt(destination_path / f"sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
             if save_h5:
-                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}R{rep}.h5", 'w') as hf:
+                with h5py.File(destination_path / "hdf5" / f"emg_data_M{movement}R{rep}.h5", 'w') as hf:
                     hf.create_dataset('emg_data', data=emg_data.transpose())
                     hf.create_dataset("label", data=labels)
         else:
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}rest.csv", emg_data, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}rest.csv", labels, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}rest.csv", mouvi_sample_counter,
-                       delimiter=',')
+            np.savetxt(destination_path / "csv" / f"emg_data_M{movement}rest.csv", emg_data.transpose(), delimiter=',')
+            np.savetxt(destination_path / "csv" / f"label_M{movement}rest.csv", labels.transpose(), delimiter=',')
+            # np.savetxt(destination_path / f"sample_counter_M{movement}rest.csv",
+                       # mouvi_sample_counter.transpose(), delimiter=',')
             if save_h5:
-                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}rest.h5", 'w') as hf:
+                with h5py.File(destination_path / "hdf5" / f"emg_data_M{movement}rest.h5", 'w') as hf:
                     hf.create_dataset('emg_data', data=emg_data.transpose())
-                    hf.create_dataset("label", data=labels)
+                    hf.create_dataset("label", data=labels.transpose())
 
         #del ind
         del data_sub_matrix
