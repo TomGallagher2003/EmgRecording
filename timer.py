@@ -4,10 +4,9 @@ from PIL import Image, ImageTk
 import threading
 from recording import EmgSession
 
-perform_time = 2  # seconds to perform one movement
-rest_time = 2     # seconds to rest between movements
-num_repeats = 3   # number of repeats for each movement
-movement_delay = 5  # seconds before resume is enabled
+# Window dimensions for both parameter and main screens
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 600
 
 # List of movement image filenames
 movement_images = [
@@ -28,51 +27,165 @@ movement_images = [
 # Rest image filename
 rest_image = "movement_library/Rest_M0.png"
 
-
 class ExerciseApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Exercise Timer")
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.root.resizable(False, False)
 
-        # Create the main frames
-        self.left_frame = tk.Frame(root)
-        self.left_frame.pack(side=tk.LEFT, padx=20, pady=20)
-        self.right_frame = tk.Frame(root)
-        self.right_frame.pack(side=tk.RIGHT, padx=20, pady=20)
+        # Session control flags and parameters
+        self.session_started = False
+        self.subject_id = None
+        self.perform_time = None
+        self.rest_time = None
+        self.num_repeats = None
+        self.movement_delay = None
 
-        # Left Frame elements
+        # Prepare EMG recorder and start initial flush
+        self.recorder = EmgSession()
+        threading.Thread(target=self._initial_flush_loop, daemon=True).start()
+
+        # Show parameter input screen
+        self._build_parameter_screen()
+
+    def _initial_flush_loop(self):
+        """Continuously discard incoming data until session begins."""
+        time.sleep(0.2)
+        while not self.session_started:
+            self.recorder.receive_and_ignore(0.1, no_print=True)
+            time.sleep(0.1)
+
+    def _build_parameter_screen(self):
+        """Build the initial parameter input UI before starting session."""
+        self.param_frame = tk.Frame(self.root, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+        self.param_frame.pack(fill="both", expand=True)
+
+        # Configure grid to center content
+        for r in (0, 7):
+            self.param_frame.grid_rowconfigure(r, weight=1)
+        for c in (0, 1):
+            self.param_frame.grid_columnconfigure(c, weight=1)
+
+        # Labels and entries (all start blank)
+        labels = ["Subject ID:", "Perform Time (seconds):", "Rest Time Between Repetitions (seconds):",
+                  "Number of Repetitions:", "Rest Time Between Movements (seconds):"]
+        self.entries = []
+        for i, label_text in enumerate(labels, start=1):
+            tk.Label(self.param_frame, text=label_text, font=("Helvetica", 14)).grid(
+                row=i, column=0, padx=20, pady=10, sticky="e"
+            )
+            entry = tk.Entry(self.param_frame, font=("Helvetica", 14))
+            entry.grid(row=i, column=1, padx=20, pady=10, sticky="w")
+            entry.bind("<KeyRelease>", lambda e: self._validate_entries())
+            self.entries.append(entry)
+
+        # Assign entries
+        self.subject_id_entry = self.entries[0]
+        self.perform_time_entry = self.entries[1]
+        self.rest_time_entry = self.entries[2]
+        self.num_repeats_entry = self.entries[3]
+        self.delay_entry = self.entries[4]
+
+        # Start button (disabled until valid input)
+        self.start_button = tk.Button(
+            self.param_frame,
+            text="Start Session",
+            font=("Helvetica", 16),
+            state=tk.DISABLED,
+            command=self._start_session
+        )
+        self.start_button.grid(row=6, column=0, columnspan=2, pady=30)
+
+    def _validate_entries(self):
+        """Enable start button only when all fields are valid."""
+        # Validate Subject ID (must be non-negative integer)
+        sid_text = self.subject_id_entry.get().strip()
+        try:
+            sid_val = int(sid_text)
+            if sid_val < 0:
+                raise ValueError
+        except ValueError:
+            self.start_button.config(state=tk.DISABLED)
+            return
+        # Validate numeric fields (positive integers for timing/repeats)
+        try:
+            p = int(self.perform_time_entry.get())
+            r = int(self.rest_time_entry.get())
+            n = int(self.num_repeats_entry.get())
+            d = int(self.delay_entry.get())
+            if p <= 0 or r <= 0 or n <= 0 or d < 0:
+                raise ValueError
+        except ValueError:
+            self.start_button.config(state=tk.DISABLED)
+            return
+        # All valid
+        self.start_button.config(state=tk.NORMAL)
+
+    def _start_session(self):
+        """Read parameters, remove input UI, and start the session."""
+        # Parse user inputs (Subject ID forced to integer)
+        self.subject_id = int(self.subject_id_entry.get().strip())
+        self.perform_time = int(self.perform_time_entry.get())
+        self.rest_time = int(self.rest_time_entry.get())
+        self.num_repeats = int(self.num_repeats_entry.get())
+        self.movement_delay = int(self.delay_entry.get())
+
+        # Begin session
+        self.session_started = True
+        self.recorder.set_id(self.subject_id)
+        self.param_frame.destroy()
+        self._build_main_ui()
+        self.run_cycle()
+
+    def _build_main_ui(self):
+        """Initialize main UI components once session starts."""
+        # State variables
+        self.current_index = 0
+        self.current_repeat = 0
+        self.start_time = None
+        self.paused = False
+        self.after_last_repeat = False
+
+        # Left/right frames
+        self.left_frame = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
+        self.left_frame.pack(side=tk.LEFT, fill="both", pady=20)
+        self.right_frame = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
+        self.right_frame.pack(side=tk.RIGHT, fill="both", pady=20)
+
+        # Left frame: next movement preview and runtime
         self.next_image_label = tk.Label(self.left_frame)
-        self.next_image_label.pack(anchor="nw")
+        self.next_image_label.pack(anchor="nw", padx=10, pady=10)
         self.variable_label = tk.Label(
             self.left_frame,
             text=self.get_variables_text(),
             font=("Helvetica", 14)
         )
-        self.variable_label.pack(anchor="w")
+        self.variable_label.pack(anchor="w", padx=10, pady=10)
         self.runtime_label = tk.Label(
             self.left_frame,
             text="Runtime: 0 seconds",
             font=("Helvetica", 16)
         )
-        self.runtime_label.pack(anchor="w")
+        self.runtime_label.pack(anchor="w", padx=10, pady=10)
 
-        # Right Frame elements
+        # Right frame: current image, timer, index, and controls
         self.image_label = tk.Label(self.right_frame)
-        self.image_label.pack()
+        self.image_label.pack(pady=10)
         self.time_label = tk.Label(
             self.right_frame,
             text="",
             font=("Helvetica", 16)
         )
-        self.time_label.pack()
+        self.time_label.pack(pady=10)
         self.index_label = tk.Label(
             self.right_frame,
             text="",
             font=("Helvetica", 16)
         )
-        self.index_label.pack()
+        self.index_label.pack(pady=10)
 
-        # Pause, Resume, and Stop buttons
+        # Control buttons
         self.pause_button = tk.Button(
             self.right_frame,
             text="Pause",
@@ -90,7 +203,6 @@ class ExerciseApp:
             bg="green",
             command=self.resume_exercise
         )
-        # Stop button to end session when paused
         self.stop_button = tk.Button(
             self.right_frame,
             text="Stop Session",
@@ -100,25 +212,14 @@ class ExerciseApp:
             command=self.stop_session
         )
 
-        # State variables
-        self.current_index = 0
-        self.current_repeat = 0
-        self.start_time = None
-        self.paused = False
-        self.after_last_repeat = False
-
-        # EMG recorder
-        self.recorder = EmgSession()
-        time.sleep(0.5)
-        threading.Thread(target=self.clear_initial, daemon=True).start()
-        time.sleep(0.5)
-        # Start application
-        self.run_cycle()
-
     def get_variables_text(self):
-        return (f"Perform Time: {perform_time} seconds\n"  
-                f"Rest Time: {rest_time} seconds\n"   
-                f"Number of Repeats: {num_repeats}")
+        return (
+            f"Subject ID: {self.subject_id}\n"
+            f"Perform Time: {self.perform_time} seconds\n"
+            f"Rest Time: {self.rest_time} seconds\n"
+            f"Number of Repeats: {self.num_repeats}\n"
+            f"Movement Delay: {self.movement_delay} seconds"
+        )
 
     def show_image(self, path):
         img = Image.open(path)
@@ -157,11 +258,8 @@ class ExerciseApp:
                 self.index_label.config(
                     text=f"Resting before movement {self.current_index+1}"
                 )
-                threading.Thread(
-                    target=self.record_rest_before_movement,
-                    daemon=True
-                ).start()
-                self.countdown(5, self.start_movement)
+                threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
+                self.countdown(self.movement_delay, self.start_movement)
             elif self.after_last_repeat:
                 self.after_last_repeat = False
                 self.current_repeat = 0
@@ -173,18 +271,15 @@ class ExerciseApp:
             self.show_image(rest_image)
             self.show_next_image(movement_images[-1])
             self.index_label.config(text="Session Complete")
-            self.countdown(5, self.end_session)
+            self.countdown(self.movement_delay, self.end_session)
 
     def start_movement(self):
-        if self.current_repeat < num_repeats:
+        if self.current_repeat < self.num_repeats:
             self.show_image(movement_images[self.current_index])
             self.update_index(self.current_index, self.current_repeat)
-            threading.Thread(
-                target=self.record_emg,
-                daemon=True
-            ).start()
+            threading.Thread(target=self.record_emg, daemon=True).start()
             self.show_next_image(movement_images[self.current_index])
-            self.countdown(perform_time, self.rest_after_movement)
+            self.countdown(self.perform_time, self.rest_after_movement)
         else:
             self.current_repeat = 0
             self.current_index += 1
@@ -197,7 +292,7 @@ class ExerciseApp:
         self.index_label.config(
             text=f"Resting between repeats for movement {self.current_index+1}"
         )
-        self.countdown(rest_time, self.start_movement)
+        self.countdown(self.rest_time, self.start_movement)
 
     def countdown(self, duration, callback):
         if duration > 0 and not self.paused:
@@ -213,7 +308,6 @@ class ExerciseApp:
             self.root.after(100, self.start_flush_loop)
 
     def countdown_resume(self, seconds):
-        """Disable resume button, gray it out, and show countdown on it."""
         if seconds > 0:
             self.resume_button.config(text=f"Resume ({seconds}s)", bg="grey")
             self.resume_button.config(state='disabled')
@@ -226,28 +320,21 @@ class ExerciseApp:
         self.current_repeat = 0
         self.after_last_repeat = False
 
-        # update labels
         self.show_image(rest_image)
         self.show_next_image(movement_images[self.current_index])
-        self.index_label.config(
-            text=f"Press Resume or Stop Session"
-        )
+        self.index_label.config(text="Press Resume or Stop Session")
         self.time_label.config(text="")
 
-        # toggle buttons: hide pause, show resume and stop
         self.pause_button.pack_forget()
         self.resume_button.pack(pady=10)
         self.stop_button.pack(pady=10)
-        self.countdown_resume(movement_delay)
+        self.countdown_resume(self.movement_delay)
 
-        # start continuous flushing while paused
         self.start_flush_loop()
 
     def resume_exercise(self):
         if self.paused:
             self.paused = False
-
-            # restore UI and buttons
             self.resume_button.pack_forget()
             self.stop_button.pack_forget()
             self.pause_button.pack(pady=10)
@@ -257,20 +344,15 @@ class ExerciseApp:
                 text=f"Resting before movement {self.current_index+1}"
             )
             self.time_label.config(text="")
-
-            threading.Thread(
-                target=self.record_rest_before_movement,
-                daemon=True
-            ).start()
-            self.countdown(5, self.start_movement)
+            threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
+            self.countdown(self.movement_delay, self.start_movement)
 
     def stop_session(self):
-        # finish EMG recording and close app
         self.recorder.finish()
         self.root.destroy()
 
     def end_session(self):
-        self.update_index("All", "Complete")
+        self.index_label.config(text="Session Complete")
         self.time_label.config(text="")
         self.runtime_label.config(
             text=f"Total Runtime: {int(time.time() - self.start_time)} seconds"
@@ -278,19 +360,17 @@ class ExerciseApp:
 
     def record_emg(self):
         self.recorder.emg_recording(
-            perform_time,
-            rest_time,
-            self.current_index+1,
-            self.current_repeat+1
+            self.perform_time,
+            self.rest_time,
+            self.current_index + 1,
+            self.current_repeat + 1
         )
 
     def record_rest_before_movement(self):
-        self.recorder.record_initial_rest(movement_delay, self.current_index+1)
-
-    def clear_initial(self):
-        for i in range(5):
-            self.recorder.receive_and_ignore(0.1)
-
+        self.recorder.record_initial_rest(
+            self.movement_delay,
+            self.current_index + 1
+        )
 
 if __name__ == "__main__":
     root = tk.Tk()

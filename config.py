@@ -1,16 +1,21 @@
 """ Defines the Configurations for data collection"""
 class Config:
 
+    READ_EMG = True
+    READ_EEG = False
+
+
+    DEVICE_EN = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    EMG = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    MODE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
     # Configuration parameters
     TCP_PORT = 54320
     OFFSET_EMG = 1000
     PLOT_TIME = 1
     IP_ADDRESS = '192.168.76.1'
 
-    # Configuration for muovi 1
-    DEVICE_EN = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    EMG = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    MODE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
 
     NUM_CHAN = [38, 38, 38, 38, 70, 70, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     SAMPLE_FREQUENCY = 2000

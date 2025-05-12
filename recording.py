@@ -1,5 +1,6 @@
 import gc
 import struct
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +22,8 @@ class EmgSession:
         self.recording = False
         self.emg_channels = None
         self.start()
+        self.id = 0
+        self.dateString = datetime.today().strftime('%d-%m')
 
     def start(self):
         # Validate the contents of the configuration arrays
@@ -90,7 +93,6 @@ class EmgSession:
         offset = simple_alignment(data_buffer)
         if offset != 0:
             data_buffer = data_buffer[:-offset]
-        print(f"Offset: {offset}")
         sample_size = 88
         remainder = len(data_buffer) % sample_size
         if remainder != 0:
@@ -150,25 +152,15 @@ class EmgSession:
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
         destination_path = Path(Config.DATA_DESTINATION_PATH)
 
-        if is_movement:
-            np.savetxt(destination_path / "csv" / f"emg_data_M{movement}R{rep}.csv", emg_data.transpose(), delimiter=',')
-            np.savetxt(destination_path / "csv" / f"label_M{movement}R{rep}.csv", labels.transpose(), delimiter=',')
-            # np.savetxt(destination_path / f"sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
-            if save_h5:
-                with h5py.File(destination_path / "hdf5" / f"emg_data_M{movement}R{rep}.h5", 'w') as hf:
-                    hf.create_dataset('emg_data', data=emg_data.transpose())
-                    hf.create_dataset("label", data=labels)
-        else:
-            np.savetxt(destination_path / "csv" / f"emg_data_M{movement}rest.csv", emg_data.transpose(), delimiter=',')
-            np.savetxt(destination_path / "csv" / f"label_M{movement}rest.csv", labels.transpose(), delimiter=',')
-            # np.savetxt(destination_path / f"sample_counter_M{movement}rest.csv",
-                       # mouvi_sample_counter.transpose(), delimiter=',')
-            if save_h5:
-                with h5py.File(destination_path / "hdf5" / f"emg_data_M{movement}rest.h5", 'w') as hf:
-                    hf.create_dataset('emg_data', data=emg_data.transpose())
-                    hf.create_dataset("label", data=labels.transpose())
+        suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
 
-        #del ind
+        np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
+        np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
+        if save_h5:
+            with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5", 'w') as hf:
+                hf.create_dataset('emg_data', data=emg_data.transpose())
+                hf.create_dataset("label", data=labels)
+
         del data_sub_matrix
         gc.collect()
 
@@ -182,4 +174,8 @@ class EmgSession:
                 data = self.socket_handler.receive(1024)
                 if not data:
                     break
+
+    def set_id(self, new_id):
+        self.id = new_id
+
 
