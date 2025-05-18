@@ -131,6 +131,9 @@ class EmgSession:
                     ind = np.where(data_sub_matrix >= 8388608)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
+                    # converting raw volts to mV using the ratios from the documentation
+                    data = data * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+
                     data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
 
                 del ch_ind

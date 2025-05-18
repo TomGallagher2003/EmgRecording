@@ -26,7 +26,7 @@ def plot_file(filename):
     fig.suptitle(f'file: {filename}', fontsize=16)
 
     for j, emg_signal in enumerate(data):
-        axes[j].set_ylim(-6000, 6000)
+        axes[j].set_ylim(-1, 1)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
