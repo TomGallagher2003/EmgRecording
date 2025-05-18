@@ -71,9 +71,9 @@ class EmgSession:
 
         total_samples = Config.SAMPLE_FREQUENCY * rec_time
         expected_bytes = self.tot_num_byte * total_samples
-        data = np.zeros((self.tot_num_chan + 1, Config.SAMPLE_FREQUENCY * rec_time))
+        data = np.zeros((self.tot_num_chan, Config.SAMPLE_FREQUENCY * rec_time))
 
-        chan_ready = 1
+        chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
         chunk_size = 512
@@ -120,6 +120,9 @@ class EmgSession:
                     ind = np.where(data_sub_matrix >= 32768)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
+                    # converting raw volts to mV using the ratios from the documentation
+                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+
                     data[chan_ready:chan_ready + 33, :] = data_sub_matrix
                     data[chan_ready+33:chan_ready + 38, :] = data_sub_matrix_aux
 
@@ -131,8 +134,7 @@ class EmgSession:
                     ind = np.where(data_sub_matrix >= 8388608)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
-                    # converting raw volts to mV using the ratios from the documentation
-                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+                    # will need to convert to correct unit here
 
                     data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
 
@@ -149,7 +151,7 @@ class EmgSession:
         # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
-        emg_data = data[:]
+        emg_data = data[Config.MUOVI_EMG_CHANNELS]
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
@@ -159,6 +161,9 @@ class EmgSession:
 
         np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
         np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
+        np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
+
+
         if save_h5:
             with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5", 'w') as hf:
                 hf.create_dataset('emg_data', data=emg_data.transpose())
