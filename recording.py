@@ -132,7 +132,7 @@ class EmgSession:
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
                     # converting raw volts to mV using the ratios from the documentation
-                    data = data * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
 
                     data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
 
@@ -149,7 +149,7 @@ class EmgSession:
         # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
-        emg_data = data[Config.MUOVI_EMG_CHANNELS]
+        emg_data = data[:]
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
