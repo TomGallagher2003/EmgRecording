@@ -7,7 +7,8 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "example_movement.csv"  # put the filename here and run ths python file to view.
+FILENAME = "emg_data_ID88_18-05_M1R2.csv"  # Put the filename here and run ths python file to view.
+AMPLITUDE = 0.7                            # You can adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(filename):
     """
@@ -20,16 +21,18 @@ def plot_file(filename):
     data = data.transpose()
 
     print(data[-3][2100:2110])
+    print(data.shape)
 
     plt.clf()
     fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
     fig.suptitle(f'file: {filename}', fontsize=16)
 
     for j, emg_signal in enumerate(data):
-        axes[j].set_ylim(-1, 1)
+        axes[j].set_ylim(-1 * AMPLITUDE, AMPLITUDE)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
+        print(j)
 
 
 
