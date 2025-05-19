@@ -7,12 +7,12 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "emg_data_ID1_18-05_M2R2.csv"  # Put the filename here and run this python file to view.
+FILENAME = "eeg_data_ID0_19-05_M1R2.csv"  # Put the filename here and run this python file to view.
 AMPLITUDE = 0.7                    # Adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(filename):
     """
-    Plots the given emg data file.
+    Plots the given eeg data file.
     """
 
     file_path = os.path.join("emg_data", "csv", filename)
@@ -20,46 +20,24 @@ def plot_file(filename):
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
-    print(data[-3][2100:2110])
     print(data.shape)
 
     plt.clf()
-    fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
+    fig, axes = plt.subplots(nrows=64, ncols=1, figsize=(16, 16), sharex=True)
     fig.suptitle(f'file: {filename}', fontsize=16)
-    X = 0
 
-    for j, emg_signal in enumerate(data[-32:]):
+    for j, emg_signal in enumerate(data):
         axes[j].set_ylim(-1 * AMPLITUDE, AMPLITUDE)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
+        print(j)
 
 
 
     plt.show()
-def plot_channel(filename, channel=0):
-    """
-    Plots the given emg data file.
-    """
 
-    file_path = os.path.join("emg_data", "csv", filename)
-
-    data = np.loadtxt(file_path, delimiter=',')
-    data = data.transpose()
-
-    print(data[-3][2100:2110])
-    print(data.shape)
-
-    plt.clf()
-    plt.figure(figsize=(15, 5))
-    plt.ylim((-1, 1))
-
-    plt.plot(data[channel])
-
-
-
-    plt.show()
 
 if __name__ == '__main__':
 
-    plot_channel(FILENAME)
+    plot_file(FILENAME)

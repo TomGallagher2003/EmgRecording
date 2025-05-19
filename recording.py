@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import time
 import h5py
-from channel_alignment import simple_alignment
+from channel_alignment import simple_alignment, find_eeg_counter
 from configuration_processing import calculate_crc8, validate_config, process_config
 from socket_handling import SocketHandler
 from config import Config
@@ -90,10 +90,14 @@ class EmgSession:
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
 
-        offset = simple_alignment(data_buffer)
+        if not Config.READ_EEG:
+            offset = simple_alignment(data_buffer)
+        else:
+            offset = find_eeg_counter(data_buffer)
+            print("offset = ", offset)
         if offset != 0:
             data_buffer = data_buffer[:-offset]
-        sample_size = 88
+        sample_size = self.tot_num_byte
         remainder = len(data_buffer) % sample_size
         if remainder != 0:
             data_buffer = data_buffer[remainder:]
@@ -103,16 +107,18 @@ class EmgSession:
         else:
             print("Warning: received less data than expected")
 
+
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
-
 
         # Processing data
         for DevId in range(16):
             if Config.DEVICE_EN[DevId] == 1:
                 if Config.EMG[DevId] == 1:
-                    ch_ind = np.arange(0, 33 * 2, 2)
-                    ch_ind_aux = np.arange(33*2, 38 * 2, 2)
+                    # EMG CASE
+
+                    ch_ind = np.arange(0, 32 * 2, 2)
+                    ch_ind_aux = np.arange(32*2, 38 * 2, 2)
                     data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
                     data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 256 + temp[ch_ind_aux + 1].astype(np.int32)
 
@@ -121,22 +127,27 @@ class EmgSession:
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
                     # converting raw volts to mV using the ratios from the documentation
-                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_MODE] * 1e3
 
-                    data[chan_ready:chan_ready + 33, :] = data_sub_matrix
-                    data[chan_ready+33:chan_ready + 38, :] = data_sub_matrix_aux
+                    data[chan_ready:chan_ready + 32, :] = data_sub_matrix
+                    data[chan_ready+32:chan_ready + 38, :] = data_sub_matrix_aux
 
                 else:
-                    ch_ind = np.arange(0, Config.NUM_CHAN[DevId] * 3, 3)
-                    data_sub_matrix = temp[ch_ind] * 65536 + temp[ch_ind + 1] * 256 + temp[ch_ind + 2]
+                    # EEG CASE
+                    start = Config.MUOVI_PLUS_EEG_CHANNELS[0] * 2
+                    ch_ind = np.arange(start, start + 64 * 3, 3)
+                    ch_ind_aux = np.arange(start + 64 * 3, start + 64 * 3 + 6 * 3, 3)
+                    data_sub_matrix = temp[ch_ind].astype(np.int32) * 65536 + temp[ch_ind + 1].astype(np.int32) * 256 + temp[ch_ind + 2].astype(np.int32)
+                    data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 65536 + temp[ch_ind_aux + 1].astype(np.int32) * 256 + temp[ch_ind_aux + 2].astype(np.int32)
 
                     # Search for the negative values and make the two's complement
                     ind = np.where(data_sub_matrix >= 8388608)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
-                    # will need to convert to correct unit here
+                    # TODO will need to convert to correct unit here
 
-                    data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
+                    data[chan_ready:chan_ready + 64, :] = data_sub_matrix
+                    data[chan_ready + 64:chan_ready + 70, :] = data_sub_matrix_aux
 
                 del ch_ind
                 del ind
@@ -151,23 +162,38 @@ class EmgSession:
         # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
         data[chan_ready:chan_ready + 6, :] = data_sub_matrix
-        emg_data = data[Config.MUOVI_EMG_CHANNELS]
+        suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
+        destination_path = Path(Config.DATA_DESTINATION_PATH)
+        labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
+
+        if Config.READ_EMG:
+            emg_data = data
+            np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv",
+                       emg_data.transpose(), delimiter=',')
+            if save_h5:
+                with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5",
+                               'w') as hf:
+                    hf.create_dataset('emg_data', data=emg_data.transpose())
+                    hf.create_dataset("label", data=labels)
+
+        if Config.READ_EEG:
+            eeg_data = data[Config.MUOVI_PLUS_EEG_CHANNELS]
+            np.savetxt(destination_path / "csv" / f"eeg_data_ID{self.id}_{self.dateString}_{suffix}.csv",
+                       eeg_data.transpose(), delimiter=',')
+            if save_h5:
+                with h5py.File(destination_path / "hdf5" / f"eeg_data_ID{self.id}_{self.dateString}_{suffix}.h5",
+                               'w') as hf:
+                    hf.create_dataset('emg_data', data=eeg_data.transpose())
+                    hf.create_dataset("label", data=labels)
+
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
-        labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
-        destination_path = Path(Config.DATA_DESTINATION_PATH)
 
-        suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
 
-        np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
         np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
         np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
 
 
-        if save_h5:
-            with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5", 'w') as hf:
-                hf.create_dataset('emg_data', data=emg_data.transpose())
-                hf.create_dataset("label", data=labels)
 
         del data_sub_matrix
         gc.collect()

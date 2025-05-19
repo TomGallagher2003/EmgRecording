@@ -44,3 +44,16 @@ def simple_alignment(data_buffer):
                 return (44-i)%44 * 2
     print("Failed to find sample counter channel")
     return 0
+
+
+def find_eeg_counter(data_buffer):
+    array = np.frombuffer(data_buffer, dtype=np.uint8)
+
+    for j in range(296):
+        chans = []
+        for i in range(5):
+            chan = array[i*298 + j].astype(np.int32) * 65536 + array[i*298 + j+1].astype(np.int32) * 256 + array[i*298 + j+2].astype(np.int32)
+            chans.append(chan)
+        if all(chans[k] == chans[k-1] + 1 for k in range(1, 5)):
+            return (j - 286) % 296
+    return 0

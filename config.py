@@ -2,12 +2,12 @@
 class Config:
 
     READ_EMG = True
-    READ_EEG = False
+    READ_EEG = True
 
     # Set the Gain Mode here : 0 -> 8, 1 -> 4
-    EMG_GAIN_MODE = 0
+    EMG_MODE = 0
 
-    EEG_GAIN_MODE = 0
+    EEG_MODE = 3
 
     EMG_GAIN_RATIOS = {
     0: 286.1e-9,   # MODE=00 → 286.1 nV
@@ -15,9 +15,9 @@ class Config:
 }
 
 
-    DEVICE_EN = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    DEVICE_EN = [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     EMG = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    MODE = [EMG_GAIN_MODE, 0, 0, 0, EEG_GAIN_MODE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    MODE = [EMG_MODE, 0, 0, 0, EEG_MODE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
     # Configuration parameters
@@ -35,9 +35,17 @@ class Config:
     IMAGE_SOURCE_PATH = "./movement_library/EA"
 
 
-    # These channle lists are determined in configuration processing but are defined here to simplify plotting
+    # These channel lists are determined in configuration processing but are defined here to simplify plotting
+    num_channels_used = 0
     MUOVI_EMG_CHANNELS = list(range(0, 32))
-    MUOVI_AUX_CHANNELS = list(range(32,38))
-    SYNCSTATION_CHANNELS = list(range(38, 44))
+    MUOVI_AUX_CHANNELS = list(range(32, 38))
+    if READ_EMG:
+        num_channels_used += 38
+
+    MUOVI_PLUS_EEG_CHANNELS = list(range(num_channels_used, num_channels_used + 70))
+    if READ_EEG:
+        num_channels_used += 70
+
+    SYNCSTATION_CHANNELS = list(range(num_channels_used, num_channels_used + 6))
 
     PLOT = False
