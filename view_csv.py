@@ -1,14 +1,13 @@
 import os
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "emg_data_ID88_18-05_M1R2.csv"  # Put the filename here and run ths python file to view.
-AMPLITUDE = 0.7                            # You can adjust the amplitude here if the data goes off the edges of the graph
+FILENAME = "example_data.csv"           # Put the filename here and run this python file to view.
+SINGLE_CHANNEL_MODE = False               # Set to True to see just the first channel, set to False to see all channels
+AMPLITUDE = 0.7                          # You can adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(filename):
     """
@@ -38,7 +37,32 @@ def plot_file(filename):
 
     plt.show()
 
+def plot_channel(filename, channel=0):
+    """
+    Plots the given emg data file.
+    """
+
+    file_path = os.path.join("emg_data", "csv", filename)
+
+    data = np.loadtxt(file_path, delimiter=',')
+    data = data.transpose()
+
+    print(data[-3][2100:2110])
+    print(data.shape)
+
+    plt.clf()
+    plt.figure(figsize=(10, 6))
+    plt.ylim((-1 * AMPLITUDE, AMPLITUDE))
+
+    plt.plot(data[channel])
+
+
+
+    plt.show()
 
 if __name__ == '__main__':
 
-    plot_file(FILENAME)
+    if SINGLE_CHANNEL_MODE:
+        plot_channel(FILENAME)
+    else:
+        plot_file(FILENAME)

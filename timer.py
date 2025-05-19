@@ -99,7 +99,6 @@ class ExerciseApp:
 
     def _validate_entries(self):
         """Enable start button only when all fields are valid."""
-        # Validate Subject ID (must be non-negative integer)
         sid_text = self.subject_id_entry.get().strip()
         try:
             sid_val = int(sid_text)
@@ -108,7 +107,6 @@ class ExerciseApp:
         except ValueError:
             self.start_button.config(state=tk.DISABLED)
             return
-        # Validate numeric fields (positive integers for timing/repeats)
         try:
             p = int(self.perform_time_entry.get())
             r = int(self.rest_time_entry.get())
@@ -119,19 +117,16 @@ class ExerciseApp:
         except ValueError:
             self.start_button.config(state=tk.DISABLED)
             return
-        # All valid
         self.start_button.config(state=tk.NORMAL)
 
     def _start_session(self):
         """Read parameters, remove input UI, and start the session."""
-        # Parse user inputs (Subject ID forced to integer)
         self.subject_id = int(self.subject_id_entry.get().strip())
         self.perform_time = int(self.perform_time_entry.get())
         self.rest_time = int(self.rest_time_entry.get())
         self.num_repeats = int(self.num_repeats_entry.get())
         self.movement_delay = int(self.delay_entry.get())
 
-        # Begin session
         self.session_started = True
         self.recorder.set_id(self.subject_id)
         self.param_frame.destroy()
@@ -139,21 +134,17 @@ class ExerciseApp:
         self.run_cycle()
 
     def _build_main_ui(self):
-        """Initialize main UI components once session starts."""
-        # State variables
         self.current_index = 0
         self.current_repeat = 0
         self.start_time = None
         self.paused = False
         self.after_last_repeat = False
 
-        # Left/right frames
         self.left_frame = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
         self.left_frame.pack(side=tk.LEFT, fill="both", pady=20)
         self.right_frame = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
         self.right_frame.pack(side=tk.RIGHT, fill="both", pady=20)
 
-        # Left frame: next movement preview and runtime
         self.next_image_label = tk.Label(self.left_frame)
         self.next_image_label.pack(anchor="nw", padx=10, pady=10)
         self.variable_label = tk.Label(
@@ -169,7 +160,6 @@ class ExerciseApp:
         )
         self.runtime_label.pack(anchor="w", padx=10, pady=10)
 
-        # Right frame: current image, timer, index, and controls
         self.image_label = tk.Label(self.right_frame)
         self.image_label.pack(pady=10)
         self.time_label = tk.Label(
@@ -185,7 +175,6 @@ class ExerciseApp:
         )
         self.index_label.pack(pady=10)
 
-        # Control buttons
         self.pause_button = tk.Button(
             self.right_frame,
             text="Pause",
@@ -352,11 +341,21 @@ class ExerciseApp:
         self.root.destroy()
 
     def end_session(self):
+        # Send stop command to recorder
+        self.recorder.finish()
+        # Update UI to indicate completion
         self.index_label.config(text="Session Complete")
         self.time_label.config(text="")
         self.runtime_label.config(
             text=f"Total Runtime: {int(time.time() - self.start_time)} seconds"
         )
+        # Repurpose pause button as close button
+        self.pause_button.config(text="Close", command=self.stop_session, fg="white", bg="black")
+        # Remove other controls
+        self.resume_button.pack_forget()
+        self.stop_button.pack_forget()
+        # Ensure close button is visible
+        self.pause_button.pack(pady=10)
 
     def record_emg(self):
         self.recorder.emg_recording(
