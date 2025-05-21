@@ -161,7 +161,7 @@ class EmgSession:
 
         np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
         np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
-        np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
+        #np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
 
 
         if save_h5:
