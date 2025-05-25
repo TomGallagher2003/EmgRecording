@@ -15,7 +15,10 @@ class Config:
 }
 
 
-    DEVICE_EN = [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    emg_on = 1 if READ_EMG else 0
+    eeg_on = 1 if READ_EEG else 0
+    DEVICE_EN = [emg_on, 0, 0, 0, eeg_on, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     EMG = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     MODE = [EMG_MODE, 0, 0, 0, EEG_MODE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -42,7 +45,8 @@ class Config:
     if READ_EMG:
         num_channels_used += 38
 
-    MUOVI_PLUS_EEG_CHANNELS = list(range(num_channels_used, num_channels_used + 70))
+    MUOVI_PLUS_EEG_CHANNELS = list(range(num_channels_used, num_channels_used + 64))
+    MUOVI_PLUS_AUX_CHANNELS = list(range(num_channels_used + 64, num_channels_used + 70))
     if READ_EEG:
         num_channels_used += 70
 

@@ -89,7 +89,8 @@ class EmgSession:
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
-
+        with open(f"buffers/buffer_emg_M{movement}R{rep}", "wb") as f:
+            f.write(data_buffer)
         if not Config.READ_EEG:
             offset = simple_alignment(data_buffer)
         else:
@@ -186,8 +187,8 @@ class EmgSession:
                     hf.create_dataset('emg_data', data=eeg_data.transpose())
                     hf.create_dataset("label", data=labels)
 
-        mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
-        syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
+        mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[-1]]
+        syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[-1]]
 
 
         np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
