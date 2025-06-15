@@ -29,7 +29,6 @@ def plot_file(filename):
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
-        print(j)
 
 
 
