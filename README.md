@@ -9,7 +9,7 @@ Real-time **EMG (+ EEG soon)** capture and labelled data saving and plotting to 
 ```bash
 # Clone the repo
 git clone https://github.com/TomGallagher2003/EmgRecording.git
-cd prosthetic-data-collector
+cd EmgRecording
 
 # Create & activate a virtual environment
 python -m venv .venv
