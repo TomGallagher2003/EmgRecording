@@ -24,7 +24,7 @@ python view_csv.py
 
 ## 2 . EMG Recording
 
-To record new emg data, connected the syncstation to the computer using a LAN connection,
+To record new emg data, connect the syncstation to the computer using a LAN connection,
 and connect the MUOVI device to the syncstation wirelessly. 
 With the hardware connected, run the file: timer.py
 ```bash
