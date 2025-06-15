@@ -19,8 +19,6 @@ def plot_file(filename):
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
-    print(data[-3][2100:2110])
-    print(data.shape)
 
     plt.clf()
     fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
@@ -46,9 +44,6 @@ def plot_channel(filename, channel=0):
 
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
-
-    print(data[-3][2100:2110])
-    print(data.shape)
 
     plt.clf()
     plt.figure(figsize=(10, 6))

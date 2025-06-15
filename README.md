@@ -1,10 +1,22 @@
-# Emg Recording
-**Description**
+# Prompted Biometric Data Collection
 
-A python project aiming to facilitate recording EMG (and eventually EEG) data for a collection of prompted hand movements.
+Real-time **EMG (+ EEG soon)** capture and labelled data saving and plotting to aid prosthetic-hand control research.
 
+---
 
-**This Version**
+## 1 . Quick Start (desktop demo)
 
-This is the most recent version of the local experiment software for EMG collection only. 
-Experiment parameters (number of repetitions and timing) can be configured in the timer class.
+```bash
+# Clone the repo
+git clone https://github.com/TomGallagher2003/EmgRecording.git
+cd prosthetic-data-collector
+
+# Create & activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# Install core dependencies
+pip install -r requirements.txt   # numpy, matplotlib, tk ...
+
+# Plot the supplied demo recording
+python view_csv.py
