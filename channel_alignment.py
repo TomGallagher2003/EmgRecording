@@ -39,8 +39,8 @@ def simple_alignment(data_buffer):
         if D[0] == D[1] - 1 and D[1] == D[2] - 1:
             plus6 = data[(i+6)%44]
             if plus6[0] == plus6[1] - 1 and plus6[1] == plus6[2] - 1:
-                return (34-i)%44 * 2
+                return (38-i)%44 * 2
             else:
-                return (40-i)%44 * 2
+                return (44-i)%44 * 2
     print("Failed to find sample counter channel")
     return 0

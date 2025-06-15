@@ -1,13 +1,13 @@
 import gc
 import struct
+from datetime import datetime
+from pathlib import Path
+
 import numpy as np
 import time
 import h5py
-
 from channel_alignment import simple_alignment
 from configuration_processing import calculate_crc8, validate_config, process_config
-from movement_seperation import get_movement_mask
-# from movement_seperation import get_movement_mask
 from socket_handling import SocketHandler
 from config import Config
 
@@ -22,6 +22,8 @@ class EmgSession:
         self.recording = False
         self.emg_channels = None
         self.start()
+        self.id = 0
+        self.dateString = datetime.today().strftime('%d-%m')
 
     def start(self):
         # Validate the contents of the configuration arrays
@@ -59,7 +61,7 @@ class EmgSession:
     def record_initial_rest(self, rest_time, movement):
         """ Make a single EMG recording for the rest period before a movement"""
         print(f"Recording initial rest for movement {movement} ({rest_time} seconds)")
-        self.record(False, rest_time, movement)
+        self.record(False, rest_time, movement, save_h5=True)
 
     def record(self, is_movement, rest_time, movement, perform_time=0, rep=None, save_h5=False):
         """ Make a single EMG recording"""
@@ -69,9 +71,9 @@ class EmgSession:
 
         total_samples = Config.SAMPLE_FREQUENCY * rec_time
         expected_bytes = self.tot_num_byte * total_samples
-        data = np.zeros((self.tot_num_chan + 1, Config.SAMPLE_FREQUENCY * rec_time))
+        data = np.zeros((self.tot_num_chan, Config.SAMPLE_FREQUENCY * rec_time))
 
-        chan_ready = 1
+        chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
         chunk_size = 512
@@ -91,7 +93,6 @@ class EmgSession:
         offset = simple_alignment(data_buffer)
         if offset != 0:
             data_buffer = data_buffer[:-offset]
-        print(f"Offset: {offset}")
         sample_size = 88
         remainder = len(data_buffer) % sample_size
         if remainder != 0:
@@ -104,6 +105,7 @@ class EmgSession:
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
+
 
         # Processing data
         for DevId in range(16):
@@ -118,6 +120,9 @@ class EmgSession:
                     ind = np.where(data_sub_matrix >= 32768)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
+                    # converting raw volts to mV using the ratios from the documentation
+                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_GAIN_MODE] * 1e3
+
                     data[chan_ready:chan_ready + 33, :] = data_sub_matrix
                     data[chan_ready+33:chan_ready + 38, :] = data_sub_matrix_aux
 
@@ -128,6 +133,8 @@ class EmgSession:
                     # Search for the negative values and make the two's complement
                     ind = np.where(data_sub_matrix >= 8388608)
                     data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
+
+                    # will need to convert to correct unit here
 
                     data[chan_ready:chan_ready + Config.NUM_CHAN[DevId], :] = data_sub_matrix
 
@@ -148,26 +155,20 @@ class EmgSession:
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
-        if is_movement:
+        destination_path = Path(Config.DATA_DESTINATION_PATH)
 
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}R{rep}.csv", emg_data, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}R{rep}.csv", labels, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}R{rep}.csv", mouvi_sample_counter, delimiter=',')
-            if save_h5:
-                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}R{rep}.h5", 'w') as hf:
-                    hf.create_dataset('emg_data', data=emg_data.transpose())
-                    hf.create_dataset("label", data=labels)
-        else:
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\emg_data_M{movement}rest.csv", emg_data, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\label_M{movement}rest.csv", labels, delimiter=',')
-            np.savetxt(Config.DATA_DESTINATION_PATH + rf"\sample_counter_M{movement}rest.csv", mouvi_sample_counter,
-                       delimiter=',')
-            if save_h5:
-                with h5py.File(Config.DATA_DESTINATION_PATH + rf"\hdf5\emg_data_M{movement}rest.h5", 'w') as hf:
-                    hf.create_dataset('emg_data', data=emg_data.transpose())
-                    hf.create_dataset("label", data=labels)
+        suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
 
-        #del ind
+        np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
+        np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
+        #np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
+
+
+        if save_h5:
+            with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5", 'w') as hf:
+                hf.create_dataset('emg_data', data=emg_data.transpose())
+                hf.create_dataset("label", data=labels)
+
         del data_sub_matrix
         gc.collect()
 
@@ -181,4 +182,8 @@ class EmgSession:
                 data = self.socket_handler.receive(1024)
                 if not data:
                     break
+
+    def set_id(self, new_id):
+        self.id = new_id
+
 
