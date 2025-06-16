@@ -2,6 +2,7 @@ import gc
 import struct
 from datetime import datetime
 from pathlib import Path
+import os
 
 import numpy as np
 import time
@@ -24,6 +25,7 @@ class EmgSession:
         self.start()
         self.id = 0
         self.dateString = datetime.today().strftime('%d-%m')
+        self.make_directory()
 
     def start(self):
         # Validate the contents of the configuration arrays
@@ -58,10 +60,10 @@ class EmgSession:
         """ Make a single EMG recording for the movement and following rest"""
         print(f"Recording for movement {movement} rep {rep} ({perform_time + rest_time} seconds)")
         self.record(True, rest_time, movement, perform_time=perform_time, rep=rep, save_h5=True)
-    def record_initial_rest(self, rest_time, movement):
+    def record_initial_rest(self, rest_time, movement, perform_time):
         """ Make a single EMG recording for the rest period before a movement"""
         print(f"Recording initial rest for movement {movement} ({rest_time} seconds)")
-        self.record(False, rest_time, movement, save_h5=True)
+        self.record(False, rest_time, movement, perform_time=perform_time, save_h5=True)
 
     def record(self, is_movement, rest_time, movement, perform_time=0, rep=None, save_h5=False):
         """ Make a single EMG recording"""
@@ -69,9 +71,9 @@ class EmgSession:
         else: rec_time = rest_time
 
 
-        total_samples = Config.SAMPLE_FREQUENCY * rec_time
+        total_samples = int(Config.SAMPLE_FREQUENCY * rec_time)
         expected_bytes = self.tot_num_byte * total_samples
-        data = np.zeros((self.tot_num_chan, Config.SAMPLE_FREQUENCY * rec_time))
+        data = np.zeros((self.tot_num_chan, int(Config.SAMPLE_FREQUENCY * rec_time)))
 
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
@@ -154,18 +156,18 @@ class EmgSession:
         emg_data = data[Config.MUOVI_EMG_CHANNELS]
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
-        labels = np.array([movement] * perform_time * 2000 + [0] * rest_time * 2000)
+        labels = np.array([movement] * int(perform_time * Config.SAMPLE_FREQUENCY) + [0] * int(rest_time * Config.SAMPLE_FREQUENCY))
         destination_path = Path(Config.DATA_DESTINATION_PATH)
 
         suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
 
-        np.savetxt(destination_path / "csv" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.csv", emg_data.transpose(), delimiter=',')
-        np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
+        np.savetxt(destination_path / f'{self.id}' / "csv" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", emg_data.transpose(), delimiter=',')
+        np.savetxt(destination_path / f'{self.id}' / "csv" / f"label_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", labels.transpose(), delimiter=',')
         #np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
 
 
         if save_h5:
-            with h5py.File(destination_path / "hdf5" / f"emg_data_ID{self.id}_{self.dateString}_{suffix}.h5", 'w') as hf:
+            with h5py.File(destination_path / f'{self.id}' / "hdf5" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.h5", 'w') as hf:
                 hf.create_dataset('emg_data', data=emg_data.transpose())
                 hf.create_dataset("label", data=labels)
 
@@ -185,5 +187,31 @@ class EmgSession:
 
     def set_id(self, new_id):
         self.id = new_id
+
+    def make_directory(self):
+
+        dir_path = Config.DATA_DESTINATION_PATH
+
+        # Check if it exists and is a directory
+        if not os.path.isdir(dir_path):
+            # Create the directory (and any missing parent directories)
+            os.makedirs(dir_path)
+            print(f"Created directory: {dir_path}")
+        else:
+            print(f"Directory already exists: {dir_path}")
+
+    def make_subject_directory(self, subject_id):
+
+        dir_path = Path(Config.DATA_DESTINATION_PATH) / f'{subject_id}'
+
+        # Check if it exists and is a directory
+        if not os.path.isdir(dir_path):
+            # Create the directory (and any missing parent directories)
+            os.makedirs(dir_path)
+            os.makedirs(dir_path / 'csv')
+            os.makedirs(dir_path / 'hdf5')
+            print(f"Created directory: {dir_path}")
+        else:
+            print(f"Directory already exists: {dir_path}")
 
 

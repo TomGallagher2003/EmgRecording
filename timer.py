@@ -80,14 +80,12 @@ class ExerciseApp:
             entry.bind("<KeyRelease>", lambda e: self._validate_entries())
             self.entries.append(entry)
 
-        # Assign entries
         self.subject_id_entry = self.entries[0]
         self.perform_time_entry = self.entries[1]
         self.rest_time_entry = self.entries[2]
         self.num_repeats_entry = self.entries[3]
         self.delay_entry = self.entries[4]
 
-        # Start button (disabled until valid input)
         self.start_button = tk.Button(
             self.param_frame,
             text="Start Session",
@@ -98,7 +96,7 @@ class ExerciseApp:
         self.start_button.grid(row=6, column=0, columnspan=2, pady=30)
 
     def _validate_entries(self):
-        """Enable start button only when all fields are valid."""
+        """Enable start button only when all fields are valid (allowing decimal seconds)."""
         sid_text = self.subject_id_entry.get().strip()
         try:
             sid_val = int(sid_text)
@@ -108,10 +106,10 @@ class ExerciseApp:
             self.start_button.config(state=tk.DISABLED)
             return
         try:
-            p = int(self.perform_time_entry.get())
-            r = int(self.rest_time_entry.get())
-            n = int(self.num_repeats_entry.get())
-            d = int(self.delay_entry.get())
+            p = float(self.perform_time_entry.get().strip())
+            r = float(self.rest_time_entry.get().strip())
+            n = int(self.num_repeats_entry.get().strip())
+            d = float(self.delay_entry.get().strip())
             if p <= 0 or r <= 0 or n <= 0 or d < 0:
                 raise ValueError
         except ValueError:
@@ -120,12 +118,13 @@ class ExerciseApp:
         self.start_button.config(state=tk.NORMAL)
 
     def _start_session(self):
-        """Read parameters, remove input UI, and start the session."""
+        """Read parameters (floats for times), remove input UI, and start the session."""
         self.subject_id = int(self.subject_id_entry.get().strip())
-        self.perform_time = int(self.perform_time_entry.get())
-        self.rest_time = int(self.rest_time_entry.get())
+        self.recorder.make_subject_directory(self.subject_id)
+        self.perform_time = float(self.perform_time_entry.get())
+        self.rest_time = float(self.rest_time_entry.get())
         self.num_repeats = int(self.num_repeats_entry.get())
-        self.movement_delay = int(self.delay_entry.get())
+        self.movement_delay = float(self.delay_entry.get())
 
         self.session_started = True
         self.recorder.set_id(self.subject_id)
@@ -155,7 +154,7 @@ class ExerciseApp:
         self.variable_label.pack(anchor="w", padx=10, pady=10)
         self.runtime_label = tk.Label(
             self.left_frame,
-            text="Runtime: 0 seconds",
+            text="Runtime: 0 ms",
             font=("Helvetica", 16)
         )
         self.runtime_label.pack(anchor="w", padx=10, pady=10)
@@ -204,10 +203,10 @@ class ExerciseApp:
     def get_variables_text(self):
         return (
             f"Subject ID: {self.subject_id}\n"
-            f"Perform Time: {self.perform_time} seconds\n"
-            f"Rest Time: {self.rest_time} seconds\n"
+            f"Perform Time: {self.perform_time * 1000} ms\n"
+            f"Rest Time: {self.rest_time * 1000} ms\n"
             f"Number of Repeats: {self.num_repeats}\n"
-            f"Movement Delay: {self.movement_delay} seconds"
+            f"Movement Delay: {self.movement_delay * 1000} ms"
         )
 
     def show_image(self, path):
@@ -223,17 +222,18 @@ class ExerciseApp:
         self.next_image_label.config(image=img_tk)
         self.next_image_label.image = img_tk
 
-    def update_time(self, remaining):
-        self.time_label.config(text=f"Time: {remaining} seconds")
+    def update_time(self, remaining_ms):
+        """Display remaining time in milliseconds."""
+        self.time_label.config(text=f"Time: {remaining_ms} ms")
 
     def update_index(self, mov, rep):
         self.index_label.config(text=f"Movement: {mov+1}, Repeat: {rep+1}")
 
     def update_runtime(self):
         if self.start_time is not None:
-            elapsed = int(time.time() - self.start_time)
-            self.runtime_label.config(text=f"Runtime: {elapsed} seconds")
-            self.root.after(1000, self.update_runtime)
+            elapsed = int((time.time() - self.start_time) * 1000)
+            self.runtime_label.config(text=f"Runtime: {elapsed} ms")
+            self.root.after(100, self.update_runtime)
 
     def run_cycle(self):
         if self.start_time is None:
@@ -248,7 +248,7 @@ class ExerciseApp:
                     text=f"Resting before movement {self.current_index+1}"
                 )
                 threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
-                self.countdown(self.movement_delay, self.start_movement)
+                self.countdown(int(self.movement_delay * 1000), self.start_movement)
             elif self.after_last_repeat:
                 self.after_last_repeat = False
                 self.current_repeat = 0
@@ -260,7 +260,7 @@ class ExerciseApp:
             self.show_image(rest_image)
             self.show_next_image(movement_images[-1])
             self.index_label.config(text="Session Complete")
-            self.countdown(self.movement_delay, self.end_session)
+            self.countdown(int(self.movement_delay * 1000), self.end_session)
 
     def start_movement(self):
         if self.current_repeat < self.num_repeats:
@@ -268,7 +268,7 @@ class ExerciseApp:
             self.update_index(self.current_index, self.current_repeat)
             threading.Thread(target=self.record_emg, daemon=True).start()
             self.show_next_image(movement_images[self.current_index])
-            self.countdown(self.perform_time, self.rest_after_movement)
+            self.countdown(int(self.perform_time * 1000), self.rest_after_movement)
         else:
             self.current_repeat = 0
             self.current_index += 1
@@ -281,12 +281,14 @@ class ExerciseApp:
         self.index_label.config(
             text=f"Resting between repeats for movement {self.current_index+1}"
         )
-        self.countdown(self.rest_time, self.start_movement)
+        self.countdown(int(self.rest_time * 1000), self.start_movement)
 
-    def countdown(self, duration, callback):
-        if duration > 0 and not self.paused:
-            self.update_time(duration)
-            self.root.after(1000, self.countdown, duration-1, callback)
+    def countdown(self, remaining_ms, callback):
+        """Countdown in milliseconds, updating every 100ms."""
+        if remaining_ms > 0 and not self.paused:
+            self.update_time(remaining_ms)
+            # schedule next update in 100 ms
+            self.root.after(100, self.countdown, remaining_ms - 100, callback)
         elif not self.paused:
             callback()
 
@@ -298,7 +300,7 @@ class ExerciseApp:
 
     def countdown_resume(self, seconds):
         if seconds > 0:
-            self.resume_button.config(text=f"Resume ({seconds}s)", bg="grey")
+            self.resume_button.config(text=f"Resume ({seconds}s)", bg="gray")
             self.resume_button.config(state='disabled')
             self.root.after(1000, self.countdown_resume, seconds-1)
         else:
@@ -317,7 +319,7 @@ class ExerciseApp:
         self.pause_button.pack_forget()
         self.resume_button.pack(pady=10)
         self.stop_button.pack(pady=10)
-        self.countdown_resume(self.movement_delay)
+        self.countdown_resume(int(self.movement_delay))
 
         self.start_flush_loop()
 
@@ -333,8 +335,7 @@ class ExerciseApp:
                 text=f"Resting before movement {self.current_index+1}"
             )
             self.time_label.config(text="")
-            threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
-            self.countdown(self.movement_delay, self.start_movement)
+
 
     def stop_session(self):
         self.recorder.finish()
@@ -368,7 +369,8 @@ class ExerciseApp:
     def record_rest_before_movement(self):
         self.recorder.record_initial_rest(
             self.movement_delay,
-            self.current_index + 1
+            self.current_index + 1,
+            self.perform_time
         )
 
 if __name__ == "__main__":
