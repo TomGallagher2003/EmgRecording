@@ -154,7 +154,7 @@ class ExerciseApp:
         self.variable_label.pack(anchor="w", padx=10, pady=10)
         self.runtime_label = tk.Label(
             self.left_frame,
-            text="Runtime: 0 ms",
+            text="Runtime: 0 s",
             font=("Helvetica", 16)
         )
         self.runtime_label.pack(anchor="w", padx=10, pady=10)
@@ -232,7 +232,7 @@ class ExerciseApp:
     def update_runtime(self):
         if self.start_time is not None:
             elapsed = int((time.time() - self.start_time) * 1000)
-            self.runtime_label.config(text=f"Runtime: {elapsed} ms")
+            self.runtime_label.config(text=f"Runtime: {(elapsed / 1000):.0f} s")
             self.root.after(100, self.update_runtime)
 
     def run_cycle(self):
