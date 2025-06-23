@@ -12,6 +12,7 @@ from configuration_processing import calculate_crc8, validate_config, process_co
 from socket_handling import SocketHandler
 from config import Config
 
+SAMPLE_TOLERANCE = 200
 
 class EmgSession:
     def __init__(self):
@@ -107,6 +108,14 @@ class EmgSession:
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
+
+        num_samples = temp.shape[1]
+        expected_samples = Config.SAMPLE_FREQUENCY * rec_time
+
+        if num_samples != expected_samples and expected_samples - num_samples < SAMPLE_TOLERANCE:
+            data = np.zeros((self.tot_num_chan, num_samples))
+            print(f"Allowed {num_samples} samples")
+
 
 
         # Processing data
