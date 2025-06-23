@@ -213,7 +213,7 @@ class ExerciseApp:
         self.next_image_label.image = tkimg
 
     def update_time(self, remaining_ms):
-        self.time_label.config(text=f"Time: {remaining_ms} ms")
+        self.time_label.config(text=f"Time: {(remaining_ms / 1000):.1f} s")
 
     def update_index(self, mov, rep):
         number = self.index_offset + mov + 1
@@ -223,7 +223,7 @@ class ExerciseApp:
         if self.start_time is not None:
             elapsed = int((time.time() - self.start_time) * 1000)
             self.runtime_label.config(text=f"Runtime: {elapsed//1000} s")
-            self.root.after(100, self.update_runtime)
+            self.root.after(1000, self.update_runtime)
 
     def run_cycle(self):
         if self.start_time is None:
@@ -231,11 +231,12 @@ class ExerciseApp:
             self.update_runtime()
         if self.current_index < len(self.movement_images):
             if self.current_repeat == 0 and not self.after_last_repeat:
+                remainder = int(self.movement_delay * 1000)
+                self.update_time(remainder)
+                threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
+                self.countdown(remainder, self.start_movement)
                 self.show_image(rest_image)
                 self.show_next_image(self.movement_images[self.current_index])
-                self.index_label.config(text=f"Resting before movement {self.index_offset + self.current_index + 1}")
-                threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
-                self.countdown(int(self.movement_delay*1000), self.start_movement)
             elif self.after_last_repeat:
                 self.after_last_repeat = False
                 self.current_repeat = 0
@@ -247,7 +248,7 @@ class ExerciseApp:
             self.show_image(rest_image)
             self.show_next_image(self.movement_images[-1])
             self.index_label.config(text="Session Complete")
-            self.countdown(int(self.movement_delay*1000), self.end_session)
+            self.countdown(int(self.movement_delay * 1000), self.end_session)
 
     def start_movement(self):
         if self.current_repeat < self.num_repeats:
