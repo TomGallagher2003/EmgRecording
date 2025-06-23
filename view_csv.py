@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
 
-DEFAULT_FILENAME = "example_data.csv"  # default example filename
-SINGLE_CHANNEL_MODE = False            # Set to True to see just the first channel, set to False to see all channels
+DEFAULT_FILENAME = "emg_data/1/EA/csv/emg_data_23-06_1000ms_M1R1.csv"  # default example filename
+SINGLE_CHANNEL_MODE = True            # Set to True to see just the first channel, set to False to see all channels
 AMPLITUDE = 0.7                        # You can adjust the amplitude here if the data goes off the edges of the graph
 
-def plot_file(filename):
-    file_path = os.path.join("emg_data", "csv", filename)
+def plot_file(file_path):
+    file_path
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
@@ -26,8 +26,7 @@ def plot_file(filename):
 
     plt.show()
 
-def plot_channel(filename, channel=0):
-    file_path = os.path.join("emg_data", "csv", filename)
+def plot_channel(file_path, channel=0):
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
