@@ -160,14 +160,15 @@ class EmgSession:
         destination_path = Path(Config.DATA_DESTINATION_PATH)
 
         suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
+        exercise_group = "EA" if movement < 13 else "EB"
 
-        np.savetxt(destination_path / f'{self.id}' / "csv" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", emg_data.transpose(), delimiter=',')
-        np.savetxt(destination_path / f'{self.id}' / "csv" / f"label_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", labels.transpose(), delimiter=',')
+        np.savetxt(destination_path / f'{self.id}'/ exercise_group / "csv" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", emg_data.transpose(), delimiter=',')
+        np.savetxt(destination_path / f'{self.id}' / exercise_group / "csv" / f"label_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", labels.transpose(), delimiter=',')
         #np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
 
 
         if save_h5:
-            with h5py.File(destination_path / f'{self.id}' / "hdf5" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.h5", 'w') as hf:
+            with h5py.File(destination_path / f'{self.id}' / exercise_group / "hdf5" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.h5", 'w') as hf:
                 hf.create_dataset('emg_data', data=emg_data.transpose())
                 hf.create_dataset("label", data=labels)
 
@@ -200,7 +201,7 @@ class EmgSession:
         else:
             print(f"Directory already exists: {dir_path}")
 
-    def make_subject_directory(self, subject_id):
+    def make_subject_directory(self, subject_id, exercise_set):
 
         dir_path = Path(Config.DATA_DESTINATION_PATH) / f'{subject_id}'
 
@@ -208,9 +209,17 @@ class EmgSession:
         if not os.path.isdir(dir_path):
             # Create the directory (and any missing parent directories)
             os.makedirs(dir_path)
-            os.makedirs(dir_path / 'csv')
-            os.makedirs(dir_path / 'hdf5')
+            if exercise_set == "A" or exercise_set == "AB":
+                os.makedirs(dir_path / 'EA')
+                os.makedirs(dir_path / 'EA' / 'csv')
+                os.makedirs(dir_path / 'EA' / 'hdf5')
+            if exercise_set == "B" or exercise_set == "AB":
+                os.makedirs(dir_path / 'EB')
+                os.makedirs(dir_path / 'EB' / 'csv')
+                os.makedirs(dir_path / 'EB' / 'hdf5')
             print(f"Created directory: {dir_path}")
+
+
         else:
             print(f"Directory already exists: {dir_path}")
 
