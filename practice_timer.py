@@ -62,6 +62,8 @@ class GifExerciseViewer(QWidget):
         self.gif_label = QLabel(self)
         self.gif_label.setScaledContents(True)
         self.gif_label.setFixedSize(650, 325)
+        self.gif_label.setStyleSheet("color: black; font-size: 36px;")
+
         self.content_layout.addWidget(self.gif_label, stretch=1)
         self.gif_label.show()
         self.main_layout.addLayout(self.content_layout)
