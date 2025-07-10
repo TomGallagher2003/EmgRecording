@@ -6,8 +6,9 @@ import threading
 from recording import EmgSession
 
 # Window dimensions for both parameter and main screens
-WINDOW_WIDTH = 1000
-WINDOW_HEIGHT = 600
+SIZE = 100
+WINDOW_WIDTH = 10 * SIZE
+WINDOW_HEIGHT = 6 * SIZE
 
 # Movement image lists for sets A and B
 movement_images_A = [
@@ -165,20 +166,21 @@ class ExerciseApp:
         self.start_time = None
 
         left = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
-        left.pack(side='left', fill='both', pady=20)
+        left.pack(side='left', fill='both', pady=50, padx=30)
         right = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
-        right.pack(side='right', fill='both', pady=20)
+        right.pack(side='right', fill='both', pady=50)
         self.left_frame, self.right_frame = left, right
 
         self.next_image_label = tk.Label(left)
-        self.next_image_label.pack(anchor='nw', padx=10, pady=10)
+        self.next_image_label.pack(anchor='n', padx=10, pady=10)
         self.variable_label = tk.Label(left, text=self.get_variables_text(), font=("Helvetica",14))
         self.variable_label.pack(anchor='w', padx=10, pady=10)
         self.runtime_label = tk.Label(left, text="Runtime: 0 s", font=("Helvetica",16))
         self.runtime_label.pack(anchor='w', padx=10, pady=10)
 
         self.image_label = tk.Label(right)
-        self.image_label.pack(pady=10)
+        self.image_label.pack(pady=10, padx=WINDOW_WIDTH * 0.1)
+
         self.time_label = tk.Label(right, text="", font=("Helvetica",16))
         self.time_label.pack(pady=10)
         self.index_label = tk.Label(right, text="", font=("Helvetica",16))
@@ -199,15 +201,18 @@ class ExerciseApp:
 
     def show_image(self, path):
         img = Image.open(path)
-        max_w = WINDOW_WIDTH * 0.7 - 20
-        max_h = WINDOW_HEIGHT - 280
+        max_w = WINDOW_WIDTH * 0.7
+        max_h = WINDOW_HEIGHT // 2.3
         img.thumbnail((max_w, max_h), Image.LANCZOS)
         tkimg = ImageTk.PhotoImage(img)
         self.image_label.config(image=tkimg)
         self.image_label.image = tkimg
 
     def show_next_image(self, path):
-        img = Image.open(path).resize((300,100))
+        img = Image.open(path)
+        max_w = WINDOW_WIDTH * 0.7 // 2
+        max_h = WINDOW_HEIGHT // 2.3 // 2
+        img.thumbnail((max_w, max_h), Image.LANCZOS)
         tkimg = ImageTk.PhotoImage(img)
         self.next_image_label.config(image=tkimg)
         self.next_image_label.image = tkimg
