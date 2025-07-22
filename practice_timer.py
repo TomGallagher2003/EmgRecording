@@ -1,9 +1,44 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
-from PyQt5.QtGui import QMovie, QPixmap
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QMovie, QPixmap, QPainter, QPen, QColor
+from PyQt5.QtCore import Qt, QTimer, QRectF
+
+class RadialProgress(QWidget):
+    def __init__(self, diameter=100, thickness=8, parent=None):
+        super().__init__(parent)
+        self.diameter   = diameter
+        self.thickness  = thickness
+        self.setFixedSize(diameter, diameter)
+        self._total_ms     = 1
+        self._remaining_ms = 1
+
+    def start(self, total_ms: int):
+        self._total_ms = total_ms
+        self._remaining_ms = total_ms
+        self.update()
+
+    def update_value(self, remaining_ms: int):
+        self._remaining_ms = remaining_ms
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        rect = QRectF(self.thickness/2,
+                      self.thickness/2,
+                      self.diameter - self.thickness,
+                      self.diameter - self.thickness)
+        pen = QPen(QColor('#ddd'), self.thickness)
+        painter.setPen(pen)
+        painter.drawEllipse(rect)
+        if self._total_ms > 0:
+            frac = self._remaining_ms / self._total_ms
+            span = int(360 * frac * 16)
+            pen.setColor(QColor('#525c63'))
+            painter.setPen(pen)
+            painter.drawArc(rect, 90*16, -span)
+
 
 # Movement GIFs (change these to actual paths to your .gif files)
 movement_gifs = [
@@ -68,6 +103,8 @@ class GifExerciseViewer(QWidget):
         self.gif_label.show()
         self.main_layout.addLayout(self.content_layout)
         self.main_layout.addWidget(self.status_label)
+        self.radial = RadialProgress(diameter=40, thickness=10)
+        self.main_layout.addWidget(self.radial, alignment=Qt.AlignCenter)
 
         self.timer_label = QLabel("", self)
         self.timer_label.setStyleSheet("color: black; font-size: 24px;")
@@ -161,6 +198,9 @@ class GifExerciseViewer(QWidget):
         self.show_countdown(time, self.play_next)
 
     def show_countdown(self, duration_ms, callback):
+        # reset radial arc
+        self.radial.start(duration_ms)
+        self._radial_loop(duration_ms)
         if self.current_index < len(self.preview_images) and self.between_movements:
             preview_path = self.preview_images[self.current_index]
             if os.path.exists(preview_path):
@@ -169,9 +209,10 @@ class GifExerciseViewer(QWidget):
             else:
                 self.preview_label.setText("Preview not found")
         steps = duration_ms // 1000
-        self._countdown(steps, callback)
+        self._initial_steps = steps
+        self._countdown(duration_ms, callback)
 
-    def _countdown(self, seconds_left, callback):
+    def _countdown(self, milliseconds_left, callback):
         if self.between_movements:
             msg = f"Resting before movement {self.current_index + 1}"
             if self.current_index == 4:
@@ -182,15 +223,18 @@ class GifExerciseViewer(QWidget):
         else:
             msg = f"Repeat {self.current_repeat + 1} of movement {self.current_index + 1}"
 
-        self.status_label.setText(f"{msg} \n {seconds_left}s")
+        self.status_label.setText(f"{msg} \n {self._initial_steps}s")
 
-        if seconds_left > 0:
-            QTimer.singleShot(1000, lambda: self._countdown(seconds_left - 1, callback))
+        if milliseconds_left > 0:
+            QTimer.singleShot(10, lambda: self._countdown(milliseconds_left - 10, callback))
         else:
             self.timer_label.setText("")
             self.between_movements = False
             callback()
-
+    def _radial_loop(self, remaining_ms):
+        if remaining_ms > 0:
+            self.radial.update_value(remaining_ms)
+            QTimer.singleShot(10, lambda: self._radial_loop(remaining_ms - 10))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

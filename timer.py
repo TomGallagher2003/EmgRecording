@@ -186,6 +186,12 @@ class ExerciseApp:
         self.index_label = tk.Label(right, text="", font=("Helvetica",16))
         self.index_label.pack(pady=10)
 
+        # Radial countdown indicator
+        self.canvas = tk.Canvas(self.right_frame, width=50, height=50)
+        self.canvas.pack(pady=10)
+        self.canvas.create_oval(10, 10, 40, 40, outline='#ddd', width=8);
+        self.arc = self.canvas.create_arc(10, 10, 40, 40, start=90, extent=0, style='arc', width=8)
+
         self.pause_button = tk.Button(right, text="Pause", font=("Helvetica",16), fg="black", bg="red", command=self.stop_exercise)
         self.pause_button.pack(pady=10)
         self.resume_button = tk.Button(right, text="Resume", font=("Helvetica",16), fg="black", bg="green", command=self.resume_exercise)
@@ -239,7 +245,7 @@ class ExerciseApp:
                 remainder = int(self.movement_delay * 1000)
                 self.update_time(remainder)
                 threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
-                self.countdown(remainder, self.start_movement)
+                self.start_phase(remainder, self.start_movement)
                 self.show_image(rest_image)
                 self.show_next_image(self.movement_images[self.current_index])
             elif self.after_last_repeat:
@@ -253,7 +259,7 @@ class ExerciseApp:
             self.show_image(rest_image)
             self.show_next_image(self.movement_images[-1])
             self.index_label.config(text="Session Complete")
-            self.countdown(int(self.movement_delay * 1000), self.end_session)
+            self.start_phase(int(self.movement_delay * 1000), self.end_session)
 
     def start_movement(self):
         if self.current_repeat < self.num_repeats:
@@ -261,7 +267,7 @@ class ExerciseApp:
             self.update_index(self.current_index, self.current_repeat)
             threading.Thread(target=self.record_emg, daemon=True).start()
             self.show_next_image(self.movement_images[self.current_index])
-            self.countdown(int(self.perform_time*1000), self.rest_after_movement)
+            self.start_phase(int(self.perform_time*1000), self.rest_after_movement)
         else:
             self.current_repeat = 0
             self.current_index += 1
@@ -272,13 +278,21 @@ class ExerciseApp:
         self.show_image(rest_image)
         self.show_next_image(self.movement_images[self.current_index])
         self.index_label.config(text=f"Resting between repeats for movement {self.index_offset + self.current_index + 1}")
-        self.countdown(int(self.rest_time*1000), self.start_movement)
+        self.start_phase(int(self.rest_time*1000), self.start_movement)
 
-    def countdown(self, remaining_ms, callback):
+    def start_phase(self, duration_ms, callback):
+        # reset the arc
+        self.canvas.itemconfigure(self.arc, extent=0)
+        self.update_time(duration_ms)
+        self._arc_countdown(duration_ms, duration_ms, callback)
+
+    def _arc_countdown(self, remaining_ms, total_ms, callback):
         if remaining_ms > 0 and not self.paused:
-            self.update_time(remaining_ms)
-            self.root.after(100, self.countdown, remaining_ms - 100, callback)
-        elif not self.paused:
+            elapsed = total_ms - remaining_ms
+            angle = (elapsed / total_ms) * 360
+            self.canvas.itemconfigure(self.arc, extent=angle)
+            self.root.after(50, self._arc_countdown, remaining_ms - 50, total_ms, callback)
+        else:
             callback()
 
     def start_flush_loop(self):
