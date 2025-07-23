@@ -35,7 +35,7 @@ class Config:
     IMAGE_SOURCE_PATH = "./movement_library/EA"
 
 
-    # These channle lists are determined in configuration processing but are defined here to simplify plotting
+    # These channel lists are determined in configuration processing but are defined here to simplify plotting
     MUOVI_EMG_CHANNELS = list(range(0, 32))
     MUOVI_AUX_CHANNELS = list(range(32,38))
     SYNCSTATION_CHANNELS = list(range(38, 44))
