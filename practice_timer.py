@@ -3,6 +3,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtGui import QMovie, QPixmap, QPainter, QPen, QColor
 from PyQt5.QtCore import Qt, QTimer, QRectF
+from config import Config
 
 class RadialProgress(QWidget):
     def __init__(self, diameter=100, thickness=8, parent=None):
@@ -41,12 +42,9 @@ class RadialProgress(QWidget):
 
 
 # Movement GIFs (change these to actual paths to your .gif files)
-movement_gifs = [
-    "movement_library/gif/M1.gif",
-    "movement_library/gif/M2.gif",
-    "movement_library/gif/M3.gif",
-    "movement_library/gif/M4.gif"
-]
+# replace your four‑item list with this:
+movement_gifs = [f"movement_library/gif/M{i}.gif" for i in range(1, 30)]
+
 
 # Rest image path
 rest_image_path = "movement_library/Rest_M0.png"
@@ -110,12 +108,7 @@ class GifExerciseViewer(QWidget):
         self.timer_label.setStyleSheet("color: black; font-size: 24px;")
 
         self.gif_list = gif_list
-        self.preview_images = [
-            "movement_library/EA/Index_flexion_M1.png",
-            "movement_library/EA/Index_Extension_M2.png",
-            "movement_library/EA/Middle_Flexion_M3.png",
-            "movement_library/EA/Middle_Extension_M4.png",
-        ]
+        self.preview_images = Config.MOVEMENT_IMAGES_A + Config.MOVEMENT_IMAGES_B
         self.current_index = 0
         self.current_repeat = -1
         self.movie = None
