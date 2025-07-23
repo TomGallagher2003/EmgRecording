@@ -67,6 +67,12 @@ class ExerciseApp:
         self.movement_images = []
         self.index_offset = 0
 
+        # Pause/resume state
+        self.paused = False
+        self.remaining_ms = 0
+        self.total_ms = 0
+        self.phase_callback = None
+
         # Prepare EMG recorder and flush buffer
         self.recorder = EmgSession()
         threading.Thread(target=self._initial_flush_loop, daemon=True).start()
@@ -107,14 +113,16 @@ class ExerciseApp:
          self.num_repeats_entry,
          self.delay_entry) = self.entries
 
-        # Exercise set selection
-        tk.Label(frame, text="Exercise Set (A, B, AB):", font=("Helvetica",14)).grid(row=6, column=0, sticky='e', padx=20, pady=10)
-        combo = ttk.Combobox(frame, textvariable=self.exercise_set_var, font=("Helvetica",14), values=["A","B","AB"], state='readonly')
+        tk.Label(frame, text="Exercise Set (A, B, AB):", font=("Helvetica",14))\
+            .grid(row=6, column=0, sticky='e', padx=20, pady=10)
+        combo = ttk.Combobox(frame, textvariable=self.exercise_set_var, font=("Helvetica",14),
+                             values=["A","B","AB"], state='readonly')
         combo.grid(row=6, column=1, sticky='w', padx=20, pady=10)
         combo.bind('<<ComboboxSelected>>', lambda e: self._validate_entries())
         self.exercise_set_combobox = combo
 
-        btn = tk.Button(frame, text="Start Session", font=("Helvetica",16), state='disabled', command=self._start_session)
+        btn = tk.Button(frame, text="Start Session", font=("Helvetica",16),
+                        state='disabled', command=self._start_session)
         btn.grid(row=7, column=0, columnspan=2, pady=30)
         self.start_button = btn
 
@@ -153,6 +161,7 @@ class ExerciseApp:
         self.recorder.make_subject_directory(self.subject_id, exercise_set=self.exercise_set)
         self.recorder.set_id(self.subject_id)
         self.session_started = True
+
         # Switch to main UI
         self.param_frame.destroy()
         self._build_main_ui()
@@ -162,8 +171,8 @@ class ExerciseApp:
         self.current_index = 0
         self.current_repeat = 0
         self.after_last_repeat = False
-        self.paused = False
         self.start_time = None
+        self.prev = time.time()
 
         left = tk.Frame(self.root, width=WINDOW_WIDTH//2, height=WINDOW_HEIGHT)
         left.pack(side='left', fill='both', pady=50, padx=30)
@@ -189,13 +198,18 @@ class ExerciseApp:
         # Radial countdown indicator
         self.canvas = tk.Canvas(self.right_frame, width=50, height=50)
         self.canvas.pack(pady=10)
-        self.canvas.create_oval(10, 10, 40, 40, outline='#ddd', width=8);
-        self.arc = self.canvas.create_arc(10, 10, 40, 40, start=90, extent=0, style='arc', width=8)
+        self.canvas.create_oval(10, 10, 40, 40, outline='#ddd', width=8)
+        self.arc = self.canvas.create_arc(10, 10, 40, 40, start=90, extent=0,
+                                          style='arc', width=8)
 
-        self.pause_button = tk.Button(right, text="Pause", font=("Helvetica",16), fg="black", bg="red", command=self.stop_exercise)
+        self.pause_button = tk.Button(right, text="Pause", font=("Helvetica",16),
+                                      fg="black", bg="red", command=self.pause_exercise)
         self.pause_button.pack(pady=10)
-        self.resume_button = tk.Button(right, text="Resume", font=("Helvetica",16), fg="black", bg="green", command=self.resume_exercise)
-        self.stop_button = tk.Button(right, text="Stop Session", font=("Helvetica",16), fg="white", bg="black", command=self.stop_session)
+
+        self.resume_button = tk.Button(right, text="Resume", font=("Helvetica",16),
+                                       fg="black", bg="green", command=self.resume_exercise)
+        self.stop_button = tk.Button(right, text="Stop Session", font=("Helvetica",16),
+                                     fg="white", bg="black", command=self.stop_session)
 
     def get_variables_text(self):
         return (f"Subject ID: {self.subject_id}\n"
@@ -240,22 +254,32 @@ class ExerciseApp:
         if self.start_time is None:
             self.start_time = time.time()
             self.update_runtime()
+
         if self.current_index < len(self.movement_images):
+            # initial rest before first rep
             if self.current_repeat == 0 and not self.after_last_repeat:
                 remainder = int(self.movement_delay * 1000)
+                self.index_label.config(text=f"Resting before movement {self.current_index + 1}")
                 self.update_time(remainder)
-                threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
-                self.start_phase(remainder, self.start_movement)
+                if not self.paused:
+                    threading.Thread(target=self.record_rest_before_movement, daemon=True).start()
                 self.show_image(rest_image)
                 self.show_next_image(self.movement_images[self.current_index])
+                self.start_phase(remainder, self.start_movement)
+
+            # move to next movement
             elif self.after_last_repeat:
                 self.after_last_repeat = False
                 self.current_repeat = 0
                 self.current_index += 1
                 self.run_cycle()
+
+            # continue into movement
             else:
                 self.start_movement()
+
         else:
+            # session complete
             self.show_image(rest_image)
             self.show_next_image(self.movement_images[-1])
             self.index_label.config(text="Session Complete")
@@ -265,73 +289,87 @@ class ExerciseApp:
         if self.current_repeat < self.num_repeats:
             self.show_image(self.movement_images[self.current_index])
             self.update_index(self.current_index, self.current_repeat)
-            threading.Thread(target=self.record_emg, daemon=True).start()
+            if not self.paused:
+                threading.Thread(target=self.record_emg, daemon=True).start()
             self.show_next_image(self.movement_images[self.current_index])
-            self.start_phase(int(self.perform_time*1000), self.rest_after_movement)
+            self.start_phase(int(self.perform_time * 1000), self.rest_after_movement)
         else:
             self.current_repeat = 0
             self.current_index += 1
             self.run_cycle()
 
-    def rest_after_movement(self):
-        self.current_repeat += 1
+    def start_phase(self, duration_ms, callback):
+        self.canvas.itemconfigure(self.arc, extent=0)
+        self.phase_callback = callback
+        self.total_ms = duration_ms
+        self.remaining_ms = duration_ms
+        self.update_time(duration_ms)
+        self._arc_countdown(duration_ms, duration_ms)
+
+    def _arc_countdown(self, remaining_ms, total_ms, start_time=0):
+        if start_time == 0:
+            start_time = time.time()
+        remaining = total_ms - 1000 * (time.time() - start_time)
+        self.remaining_ms = remaining_ms
+        if remaining_ms > 0:
+            if not self.paused:
+                self.root.after(50, self._arc_countdown, remaining, total_ms, start_time)
+                elapsed = total_ms - remaining_ms
+                angle = (elapsed / total_ms) * 360
+                self.canvas.itemconfigure(self.arc, extent=angle)
+
+        else:
+            if not self.paused and self.phase_callback:
+                cb = self.phase_callback
+                self.phase_callback = None
+                cb()
+
+    def pause_exercise(self):
+        # halt any pending phase and reset to first rep
+        self.paused = True
+        self.current_repeat = 0
+        self.after_last_repeat = False
+
+        # update UI
         self.show_image(rest_image)
         self.show_next_image(self.movement_images[self.current_index])
-        self.index_label.config(text=f"Resting between repeats for movement {self.index_offset + self.current_index + 1}")
-        self.start_phase(int(self.rest_time*1000), self.start_movement)
+        self.index_label.config(text=f"Press resume to restart movement {self.current_index + 1}")
+        self.time_label.config(text="")
 
-    def start_phase(self, duration_ms, callback):
-        # reset the arc
-        self.canvas.itemconfigure(self.arc, extent=0)
-        self.update_time(duration_ms)
-        self._arc_countdown(duration_ms, duration_ms, callback)
+        self.pause_button.pack_forget()
+        self.resume_button.pack(pady=10)
+        self.stop_button.pack(pady=40)
 
-    def _arc_countdown(self, remaining_ms, total_ms, callback):
-        if remaining_ms > 0 and not self.paused:
-            elapsed = total_ms - remaining_ms
-            angle = (elapsed / total_ms) * 360
-            self.canvas.itemconfigure(self.arc, extent=angle)
-            self.root.after(50, self._arc_countdown, remaining_ms - 50, total_ms, callback)
-        else:
-            callback()
+        # start flushing EMG buffer while paused
+        self.start_flush_loop()
+
+    def resume_exercise(self):
+        if not self.paused:
+            return
+        self.paused = False
+
+        # restore buttons
+        self.resume_button.pack_forget()
+        self.stop_button.pack_forget()
+        self.pause_button.pack(pady=10)
+
+        # restart this movement from rep 1
+        self.current_repeat = 0
+        self.run_cycle()
 
     def start_flush_loop(self):
         if self.paused:
             self.recorder.receive_and_ignore(0.1, no_print=True)
             self.root.after(100, self.start_flush_loop)
 
-    def countdown_resume(self, seconds):
-        if seconds > 0:
-            self.resume_button.config(text=f"Resume ({seconds}s)", bg="gray")
-            self.resume_button.config(state='disabled')
-            self.root.after(1000, self.countdown_resume, seconds-1)
-        else:
-            self.resume_button.config(state='normal', text="Resume", bg="green")
-
-    def stop_exercise(self):
-        self.paused = True
-        self.current_repeat = 0
-        self.after_last_repeat = False
+    def rest_after_movement(self):
+        self.current_repeat += 1
         self.show_image(rest_image)
         self.show_next_image(self.movement_images[self.current_index])
-        self.index_label.config(text="Press Resume or Stop Session")
-        self.time_label.config(text="")
-        self.pause_button.pack_forget()
-        self.resume_button.pack(pady=10)
-        self.stop_button.pack(pady=10)
-        self.countdown_resume(int(self.movement_delay))
-        self.start_flush_loop()
-
-    def resume_exercise(self):
-        if self.paused:
-            self.paused = False
-            self.resume_button.pack_forget()
-            self.stop_button.pack_forget()
-            self.pause_button.pack(pady=10)
-            self.show_image(rest_image)
-            self.show_next_image(self.movement_images[self.current_index])
-            self.index_label.config(text=f"Resting before movement {self.index_offset + self.current_index + 1}")
-            self.time_label.config(text="")
+        self.index_label.config(
+            text=f"Resting between repeats for movement {self.index_offset + self.current_index + 1}"
+        )
+        self.start_phase(int(self.rest_time * 1000), self.start_movement)
 
     def stop_session(self):
         self.recorder.finish()
@@ -341,8 +379,10 @@ class ExerciseApp:
         self.recorder.finish()
         self.index_label.config(text="Session Complete")
         self.time_label.config(text="")
-        self.runtime_label.config(text=f"Total Runtime: {int(time.time() - self.start_time)} seconds")
-        self.pause_button.config(text="Close", command=self.stop_session, fg="white", bg="black")
+        total_seconds = int(time.time() - self.start_time)
+        self.runtime_label.config(text=f"Total Runtime: {total_seconds} seconds")
+        self.pause_button.config(text="Close", command=self.stop_session,
+                                 fg="white", bg="black")
         self.resume_button.pack_forget()
         self.stop_button.pack_forget()
         self.pause_button.pack(pady=10)
