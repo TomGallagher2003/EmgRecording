@@ -7,9 +7,13 @@ import os
 import numpy as np
 import time
 import h5py
-from channel_alignment import simple_alignment, find_eeg_counter
-from configuration_processing import calculate_crc8, validate_config, process_config
-from socket_handling import SocketHandler
+
+from util.buffer_functions import save_buffer
+from util.channel_alignment import simple_alignment
+from util.OTB_refactored.configuration_processing import calculate_crc8, validate_config, process_config
+from util.eeg_offset_util import offset_with_eeg
+from util.processing import process
+from util.socket_handling import SocketHandler
 from config import Config
 
 SAMPLE_TOLERANCE = 200
@@ -27,6 +31,7 @@ class EmgSession:
         self.id = 0
         self.dateString = datetime.today().strftime('%d-%m')
         self.make_directory()
+        self.ind = 0
 
     def start(self):
         # Validate the contents of the configuration arrays
@@ -60,13 +65,13 @@ class EmgSession:
     def emg_recording(self, perform_time, rest_time, movement, rep):
         """ Make a single EMG recording for the movement and following rest"""
         print(f"Recording for movement {movement} rep {rep} ({perform_time + rest_time} seconds)")
-        self.record(True, rest_time, movement, perform_time=perform_time, rep=rep, save_h5=True)
+        self.record(True, rest_time, movement, perform_time=perform_time, rep=rep)
     def record_initial_rest(self, rest_time, movement, perform_time):
         """ Make a single EMG recording for the rest period before a movement"""
         print(f"Recording initial rest for movement {movement} ({rest_time} seconds)")
-        self.record(False, rest_time, movement, perform_time=perform_time, save_h5=True)
+        self.record(False, rest_time, movement, perform_time=perform_time)
 
-    def record(self, is_movement, rest_time, movement, perform_time=0, rep=None, save_h5=False):
+    def record(self, is_movement, rest_time, movement, perform_time=0, rep=None):
         """ Make a single EMG recording"""
         if is_movement: rec_time = perform_time + rest_time
         else: rec_time = rest_time
@@ -88,24 +93,21 @@ class EmgSession:
             if not data_temp:
                 break
             data_buffer += data_temp
-
+        save_buffer(data_buffer, f"test_buffer{self.ind}.bin")
+        self.ind +=1
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
-        with open(f"buffers/buffer_emg_M{movement}R{rep}", "wb") as f:
-            f.write(data_buffer)
         if not Config.READ_EEG:
             offset = simple_alignment(data_buffer)
         else:
-            offset = find_eeg_counter(data_buffer)
-            print("offset = ", offset)
+            offset = offset_with_eeg(data_buffer)
         if offset != 0:
             data_buffer = data_buffer[:-offset]
         sample_size = self.tot_num_byte
         remainder = len(data_buffer) % sample_size
         if remainder != 0:
             data_buffer = data_buffer[remainder:]
-
         if len(data_buffer) >= expected_bytes:
             data_buffer = data_buffer[-expected_bytes:]
         else:
@@ -122,100 +124,29 @@ class EmgSession:
             data = np.zeros((self.tot_num_chan, num_samples))
             print(f"Allowed {num_samples} samples")
 
+        data = process(temp, data, self.tot_num_byte, chan_ready)
 
-
-        # Processing data
-        for DevId in range(16):
-            if Config.DEVICE_EN[DevId] == 1:
-                if Config.EMG[DevId] == 1:
-                    # EMG CASE
-
-                    ch_ind = np.arange(0, 32 * 2, 2)
-                    ch_ind_aux = np.arange(32*2, 38 * 2, 2)
-                    data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
-                    data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 256 + temp[ch_ind_aux + 1].astype(np.int32)
-
-                    # Search for the negative values and make the two's complement (not on aux)
-                    ind = np.where(data_sub_matrix >= 32768)
-                    data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
-
-                    # converting raw volts to mV using the ratios from the documentation
-                    data_sub_matrix = data_sub_matrix * Config.EMG_GAIN_RATIOS[Config.EMG_MODE] * 1e3
-
-                    data[chan_ready:chan_ready + 32, :] = data_sub_matrix
-                    data[chan_ready+32:chan_ready + 38, :] = data_sub_matrix_aux
-
-                else:
-                    # EEG CASE
-                    start = Config.MUOVI_PLUS_EEG_CHANNELS[0] * 2
-                    ch_ind = np.arange(start, start + 64 * 3, 3)
-                    ch_ind_aux = np.arange(start + 64 * 3, start + 64 * 3 + 6 * 3, 3)
-                    data_sub_matrix = temp[ch_ind].astype(np.int32) * 65536 + temp[ch_ind + 1].astype(np.int32) * 256 + temp[ch_ind + 2].astype(np.int32)
-                    data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 65536 + temp[ch_ind_aux + 1].astype(np.int32) * 256 + temp[ch_ind_aux + 2].astype(np.int32)
-
-                    # Search for the negative values and make the two's complement
-                    ind = np.where(data_sub_matrix >= 8388608)
-                    data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
-
-                    # TODO will need to convert to correct unit here
-
-                    data[chan_ready:chan_ready + 64, :] = data_sub_matrix
-                    data[chan_ready + 64:chan_ready + 70, :] = data_sub_matrix_aux
-
-                del ch_ind
-                del ind
-                del data_sub_matrix
-                chan_ready += Config.NUM_CHAN[DevId]
-
-        aux_starting_byte = self.tot_num_byte - (6 * 2)
-        ch_ind = np.arange(aux_starting_byte, aux_starting_byte + 12, 2)
-        data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
-        # Search for the negative values and make the two's complement
-        # ind = np.where(data_sub_matrix >= 32768)
-        # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
-
-        data[chan_ready:chan_ready + 6, :] = data_sub_matrix
         emg_data = data[Config.MUOVI_EMG_CHANNELS]
         mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
         syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * int(perform_time * Config.SAMPLE_FREQUENCY) + [0] * int(rest_time * Config.SAMPLE_FREQUENCY))
-        destination_path = Path(Config.DATA_DESTINATION_PATH)
+
 
         suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
         exercise_group = "EA" if movement < 13 else "EB"
 
-        np.savetxt(destination_path / f'{self.id}'/ exercise_group / "csv" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", emg_data.transpose(), delimiter=',')
-        np.savetxt(destination_path / f'{self.id}' / exercise_group / "csv" / f"label_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.csv", labels.transpose(), delimiter=',')
-        #np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
-
-
-        if save_h5:
-            with h5py.File(destination_path / f'{self.id}' / exercise_group / "hdf5" / f"emg_data_{self.dateString}_{int(perform_time*1000)}ms_{suffix}.h5", 'w') as hf:
-                hf.create_dataset('emg_data', data=emg_data.transpose())
-                hf.create_dataset("label", data=labels)
+        if Config.READ_EMG:
+            self.save_channels(data[Config.MUOVI_EMG_CHANNELS], labels, "emg", perform_time, exercise_group, suffix)
 
         if Config.READ_EEG:
-            eeg_data = data[Config.MUOVI_PLUS_EEG_CHANNELS]
-            np.savetxt(destination_path / "csv" / f"eeg_data_ID{self.id}_{self.dateString}_{suffix}.csv",
-                       eeg_data.transpose(), delimiter=',')
-            if save_h5:
-                with h5py.File(destination_path / "hdf5" / f"eeg_data_ID{self.id}_{self.dateString}_{suffix}.h5",
-                               'w') as hf:
-                    hf.create_dataset('emg_data', data=eeg_data.transpose())
-                    hf.create_dataset("label", data=labels)
+            self.save_channels(data[Config.MUOVI_PLUS_EEG_CHANNELS], labels, "eeg", perform_time, exercise_group, suffix)
 
-        mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[-1]]
-        syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[-1]]
+        if Config.SAVE_COUNTERS and Config.READ_EEG and Config.READ_EMG:
+            self.save_channels(np.array([data[Config.SYNCSTATION_COUNTER_CHANNEL], data[Config.MUOVI_COUNTER_CHANNEL],
+                                         data[Config.MUOVI_PLUS_COUNTER_CHANNEL]]), labels, "counters", perform_time, exercise_group,
+                               suffix)
 
-
-        np.savetxt(destination_path / "csv" / f"label_ID{self.id}_{self.dateString}_{suffix}.csv", labels.transpose(), delimiter=',')
-        np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
-
-
-
-        del data_sub_matrix
         gc.collect()
-
     def receive_and_ignore(self, duration, no_print=False):
         if not no_print: print("Ignoring")
         end_time = time.time() + duration
@@ -265,3 +196,21 @@ class EmgSession:
             print(f"Directory already exists: {dir_path}")
 
 
+    def save_channels(self, data, labels, type_string, perform_time, exercise_group, suffix):
+
+        destination_path = Path(Config.DATA_DESTINATION_PATH)
+
+        np.savetxt(
+            destination_path / f'{self.id}' / exercise_group / "csv" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
+            data.transpose(), delimiter=',')
+        np.savetxt(
+            destination_path / f'{self.id}' / exercise_group / "csv" / f"{type_string}_label_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
+            labels.transpose(), delimiter=',')
+        # np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
+
+        if Config.SAVE_H5:
+            with h5py.File(
+                    destination_path / f'{self.id}' / exercise_group / "hdf5" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.h5",
+                    'w') as hf:
+                hf.create_dataset('{type_string}_data', data=data.transpose())
+                hf.create_dataset("{type_string}_label", data=labels)

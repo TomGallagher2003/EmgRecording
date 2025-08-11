@@ -7,28 +7,26 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "emg_data_ID1_18-05_M2R2.csv"  # Put the filename here and run this python file to view.
-AMPLITUDE = 0.7                    # Adjust the amplitude here if the data goes off the edges of the graph
+FILENAME = "data/3/EB/csv/emg_data_11-08_2000ms_M13R1.csv"  # Put the filename here and run this python file to view.
+AMPLITUDE = 0.7                  # Adjust the amplitude here if the data goes off the edges of the graph
 
-def plot_file(filename):
+def plot_file(file_path):
     """
     Plots the given emg data file.
     """
 
-    file_path = os.path.join("emg_data", "csv", filename)
 
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
-    print(data[-3][2100:2110])
     print(data.shape)
 
     plt.clf()
-    fig, axes = plt.subplots(nrows=32, ncols=1, figsize=(16, 16), sharex=True)
-    fig.suptitle(f'file: {filename}', fontsize=16)
+    fig, axes = plt.subplots(nrows=data.shape[0], ncols=1, figsize=(16, 16), sharex=True)
+    fig.suptitle(f'file: {file_path}', fontsize=16)
     X = 0
 
-    for j, emg_signal in enumerate(data[-32:]):
+    for j, emg_signal in enumerate(data):
         axes[j].set_ylim(-1 * AMPLITUDE, AMPLITUDE)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
@@ -37,24 +35,20 @@ def plot_file(filename):
 
 
     plt.show()
-def plot_channel(filename, channel=0):
+def plot_channel(file_path, channel=1):
     """
     Plots the given emg data file.
     """
 
-    file_path = os.path.join("emg_data", "csv", filename)
 
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
-
-    print(data[-3][2100:2110])
-    print(data.shape)
+    print(data[channel-1][0:5])
 
     plt.clf()
     plt.figure(figsize=(15, 5))
-    plt.ylim((-1, 1))
 
-    plt.plot(data[channel])
+    plt.plot(data[channel-1])
 
 
 
@@ -62,4 +56,5 @@ def plot_channel(filename, channel=0):
 
 if __name__ == '__main__':
 
-    plot_channel(FILENAME)
+    plot_channel(FILENAME, 32)
+    #plot_file(FILENAME)

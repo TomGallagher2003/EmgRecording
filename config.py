@@ -4,15 +4,20 @@ class Config:
     READ_EMG = True
     READ_EEG = True
 
+    SAVE_COUNTERS = True
+    SAVE_H5 = True
+
     # Set the Gain Mode here : 0 -> 8, 1 -> 4
     EMG_MODE = 0
 
     EEG_MODE = 3
 
-    EMG_GAIN_RATIOS = {
+    GAIN_RATIOS = {
     0: 286.1e-9,   # MODE=00 → 286.1 nV
     1: 572.2e-9,   # MODE=01 → 572.2 nV
-}
+    2: 1.0e-3,     # TEST MODE
+    3: 1.0e-3      # TEST MODE
+    }
 
 
 
@@ -33,7 +38,7 @@ class Config:
 
     NUM_CHAN = [38, 38, 38, 38, 70, 70, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     SAMPLE_FREQUENCY = 2000
-    DATA_DESTINATION_PATH = "./emg_data"
+    DATA_DESTINATION_PATH = "./data"
     LABEL_DESTINATION_PATH = "./labels"
     IMAGE_SOURCE_PATH = "./movement_library/EA"
 
@@ -52,7 +57,9 @@ class Config:
 
     SYNCSTATION_CHANNELS = list(range(num_channels_used, num_channels_used + 6))
 
-    PLOT = False
+    SYNCSTATION_COUNTER_CHANNEL = SYNCSTATION_CHANNELS[4]
+    MUOVI_COUNTER_CHANNEL = MUOVI_AUX_CHANNELS[4]
+    MUOVI_PLUS_COUNTER_CHANNEL = MUOVI_PLUS_AUX_CHANNELS[5]
 
     MOVEMENT_IMAGES_A = [
         "movement_library/EA/Index_flexion_M1.png",

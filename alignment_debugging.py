@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
 
-from channel_alignment import simple_alignment, find_eeg_counter
-from configuration_processing import process_config
+from util.channel_alignment import find_eeg_counter
+from util.OTB_refactored.configuration_processing import process_config
 from config import Config
 
 # === User configuration: define your raw buffer file here ===
-BUFFER_FILE = Path("buffers", "buffer_both_M3R2.bin")
+BUFFER_FILE = Path("test/buffers", "buffer_both_M3R2.bin")
 
 
 def load_and_align_buffer(buffer_file: Path):
