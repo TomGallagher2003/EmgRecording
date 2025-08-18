@@ -176,19 +176,40 @@ class EmgSession:
     def make_subject_directory(self, subject_id, exercise_set):
 
         dir_path = Path(Config.DATA_DESTINATION_PATH) / f'{subject_id}'
-
         # Check if it exists and is a directory
         if not os.path.isdir(dir_path):
             # Create the directory (and any missing parent directories)
             os.makedirs(dir_path)
-            if exercise_set == "A" or exercise_set == "AB":
-                os.makedirs(dir_path / 'EA')
-                os.makedirs(dir_path / 'EA' / 'csv')
-                os.makedirs(dir_path / 'EA' / 'hdf5')
-            if exercise_set == "B" or exercise_set == "AB":
-                os.makedirs(dir_path / 'EB')
-                os.makedirs(dir_path / 'EB' / 'csv')
-                os.makedirs(dir_path / 'EB' / 'hdf5')
+            if self.USE_EMG:
+                if exercise_set == "A" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'emg' / 'EA')
+                    os.makedirs(dir_path / 'emg' / 'EA' / 'csv')
+                    os.makedirs(dir_path / 'emg' / 'EA' / 'hdf5')
+
+                if exercise_set == "B" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'emg' / 'EB')
+                    os.makedirs(dir_path / 'emg' / 'EB' / 'csv')
+                    os.makedirs(dir_path / 'emg' / 'EB' / 'hdf5')
+            if self.USE_EEG:
+                if exercise_set == "A" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'eeg' / 'EA')
+                    os.makedirs(dir_path / 'eeg' / 'EA' / 'csv')
+                    os.makedirs(dir_path / 'eeg' / 'EA' / 'hdf5')
+
+                if exercise_set == "B" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'eeg' / 'EB')
+                    os.makedirs(dir_path / 'eeg' / 'EB' / 'csv')
+                    os.makedirs(dir_path / 'eeg' / 'EB' / 'hdf5')
+            if Config.SAVE_COUNTERS:
+                if exercise_set == "A" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'counters' / 'EA')
+                    os.makedirs(dir_path / 'counters' / 'EA' / 'csv')
+                    os.makedirs(dir_path / 'counters' / 'EA' / 'hdf5')
+
+                if exercise_set == "B" or exercise_set == "AB":
+                    os.makedirs(dir_path / 'counters' / 'EB')
+                    os.makedirs(dir_path / 'counters' / 'EB' / 'csv')
+                    os.makedirs(dir_path / 'counters' / 'EB' / 'hdf5')
             print(f"Created directory: {dir_path}")
 
 
@@ -201,16 +222,16 @@ class EmgSession:
         destination_path = Path(Config.DATA_DESTINATION_PATH)
 
         np.savetxt(
-            destination_path / f'{self.id}' / exercise_group / "csv" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
+            destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "csv" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
             data.transpose(), delimiter=',')
         np.savetxt(
-            destination_path / f'{self.id}' / exercise_group / "csv" / f"{type_string}_label_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
+            destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "csv" / f"{type_string}_label_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
             labels.transpose(), delimiter=',')
         # np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
 
         if Config.SAVE_H5:
             with h5py.File(
-                    destination_path / f'{self.id}' / exercise_group / "hdf5" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.h5",
+                    destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "hdf5" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.h5",
                     'w') as hf:
                 hf.create_dataset('{type_string}_data', data=data.transpose())
                 hf.create_dataset("{type_string}_label", data=labels)
