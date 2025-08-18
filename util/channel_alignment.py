@@ -46,26 +46,5 @@ def simple_alignment(data_buffer):
     return 0
 
 
-def find_eeg_counter(data_buffer):
-    array = np.frombuffer(data_buffer, dtype=np.uint8)
-
-    for j in range(296):
-        chans = []
-        for i in range(10):
-            chan = array[i*298 + j].astype(np.int32) * 256 + array[i*298 + j+1].astype(np.int32)
-            chans.append(chan)
-        if all(chans[k] == (chans[k-1] + 1) % 65536 for k in range(1, 5)):
-            chans2 = []
-            for q in range(5):
-                chan2 = array[q*298 + j + 76].astype(np.int32) * 256 + array[q*298 + j+1 + 76].astype(np.int32)
-                chans2.append(chan2)
-            if all(chans2[k] == (chans2[k - 1] + 1) % 65536 for k in range(1, 5)):
-                print("Found sync")
-                print(chans)
-                return (297 + 64 - j) % 298
-            else:
-                return (76 + 32 - j) % 298
-    print("Found Nothing")
-    return 0
 
 

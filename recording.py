@@ -19,7 +19,9 @@ from config import Config
 SAMPLE_TOLERANCE = 200
 
 class EmgSession:
-    def __init__(self):
+    def __init__(self, use_emg, use_eeg):
+        self.USE_EMG = use_emg
+        self.USE_EEG = use_eeg
         self.socket_handler = SocketHandler(Config.IP_ADDRESS, Config.TCP_PORT)
         self.socket_handler.connect()
         self.conf_string = None
@@ -98,7 +100,7 @@ class EmgSession:
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
-        if not Config.READ_EEG:
+        if not self.USE_EEG:
             offset = simple_alignment(data_buffer)
         else:
             offset = offset_with_eeg(data_buffer)
@@ -126,22 +128,20 @@ class EmgSession:
 
         data = process(temp, data, self.tot_num_byte, chan_ready)
 
-        emg_data = data[Config.MUOVI_EMG_CHANNELS]
-        mouvi_sample_counter = data[Config.MUOVI_AUX_CHANNELS[1]]
-        syncstation_sample_counter = data[Config.SYNCSTATION_CHANNELS[1]]
         labels = np.array([movement] * int(perform_time * Config.SAMPLE_FREQUENCY) + [0] * int(rest_time * Config.SAMPLE_FREQUENCY))
+        labels = labels if is_movement else np.array([0] * int(rest_time * Config.SAMPLE_FREQUENCY))
 
 
         suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
         exercise_group = "EA" if movement < 13 else "EB"
 
-        if Config.READ_EMG:
+        if self.USE_EMG:
             self.save_channels(data[Config.MUOVI_EMG_CHANNELS], labels, "emg", perform_time, exercise_group, suffix)
 
-        if Config.READ_EEG:
+        if self.USE_EEG:
             self.save_channels(data[Config.MUOVI_PLUS_EEG_CHANNELS], labels, "eeg", perform_time, exercise_group, suffix)
 
-        if Config.SAVE_COUNTERS and Config.READ_EEG and Config.READ_EMG:
+        if Config.SAVE_COUNTERS and self.USE_EMG and self.USE_EEG:
             self.save_channels(np.array([data[Config.SYNCSTATION_COUNTER_CHANNEL], data[Config.MUOVI_COUNTER_CHANNEL],
                                          data[Config.MUOVI_PLUS_COUNTER_CHANNEL]]), labels, "counters", perform_time, exercise_group,
                                suffix)
@@ -214,3 +214,53 @@ class EmgSession:
                     'w') as hf:
                 hf.create_dataset('{type_string}_data', data=data.transpose())
                 hf.create_dataset("{type_string}_label", data=labels)
+
+    def get_record(self, rec_time):
+
+        data_buffer = b""
+        chunk_size = 512
+        start_time = time.time()
+        self.recording = True
+
+        while time.time() - start_time < rec_time:
+            data_temp = self.socket_handler.receive(chunk_size)
+            if not data_temp:
+                break
+            data_buffer += data_temp
+
+        total_samples = int(Config.SAMPLE_FREQUENCY * rec_time)
+        expected_bytes = self.tot_num_byte * total_samples
+        data = np.zeros((self.tot_num_chan, int(Config.SAMPLE_FREQUENCY * rec_time)))
+
+        chan_ready = 0
+        data_buffer = b""  # Buffer to store the received data
+
+        chunk_size = 512
+        start_time = time.time()
+        self.recording = True
+
+        while time.time() - start_time < rec_time:
+            data_temp = self.socket_handler.receive(chunk_size)
+            if not data_temp:
+                break
+            data_buffer += data_temp
+        self.recording = False
+        if not self.USE_EEG:
+            offset = simple_alignment(data_buffer)
+        else:
+            offset = offset_with_eeg(data_buffer)
+        if offset != 0:
+            data_buffer = data_buffer[:-offset]
+        sample_size = self.tot_num_byte
+        remainder = len(data_buffer) % sample_size
+        if remainder != 0:
+            data_buffer = data_buffer[remainder:]
+        if len(data_buffer) >= expected_bytes:
+            data_buffer = data_buffer[-expected_bytes:]
+        else:
+            print("Warning: received less data than expected")
+
+        temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
+        temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
+        data = process(temp, data, self.tot_num_byte, chan_ready)
+        return data

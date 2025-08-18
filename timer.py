@@ -4,6 +4,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import threading
 from recording import EmgSession
+from util.data_validation import validate_data
 
 # Window dimensions for both parameter and main screens
 SIZE = 100
@@ -55,6 +56,10 @@ class ExerciseApp:
         self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
         self.root.resizable(False, False)
 
+        # Device selections
+        self.use_emg = False
+        self.use_eeg = False
+
         # Session parameters
         self.session_started = False
         self.subject_id = None
@@ -73,12 +78,84 @@ class ExerciseApp:
         self.total_ms = 0
         self.phase_callback = None
 
-        # Prepare EMG recorder and flush buffer
-        self.recorder = EmgSession()
-        threading.Thread(target=self._initial_flush_loop, daemon=True).start()
+        # Recorder (created after device selection confirmation, always)
+        self.recorder = None
 
-        # Show param screen
-        self._build_parameter_screen()
+        # Show device selection screen FIRST
+        self._build_device_screen()
+
+    # -------- Device selection screen (must select at least one) --------
+    def _build_device_screen(self):
+        frame = tk.Frame(self.root, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+        frame.pack(fill='both', expand=True)
+        self.device_frame = frame
+
+        for r in (0, 4):
+            frame.grid_rowconfigure(r, weight=1)
+        for c in (0, 1):
+            frame.grid_columnconfigure(c, weight=1)
+
+        title = tk.Label(frame, text="Select Connected Devices", font=("Helvetica", 20))
+        title.grid(row=1, column=0, columnspan=2, pady=20)
+
+        self.emg_var = tk.BooleanVar(value=False)
+        self.eeg_var = tk.BooleanVar(value=False)
+
+        emg_cb = tk.Checkbutton(frame, text="EMG", variable=self.emg_var, font=("Helvetica", 16),
+                                command=self._validate_device_selection)
+        eeg_cb = tk.Checkbutton(frame, text="EEG", variable=self.eeg_var, font=("Helvetica", 16),
+                                command=self._validate_device_selection)
+        emg_cb.grid(row=2, column=0, pady=10)
+        eeg_cb.grid(row=2, column=1, pady=10)
+
+        self.device_error = tk.Label(frame, text="", fg="red", font=("Helvetica", 12))
+        self.device_error.grid(row=3, column=0, columnspan=2, pady=5)
+
+        self.device_continue_btn = tk.Button(frame, text="Continue", font=("Helvetica", 16),
+                                             state='disabled', command=self._confirm_devices)
+        self.device_continue_btn.grid(row=4, column=0, columnspan=2, pady=30)
+
+    def _validate_device_selection(self):
+        if self.emg_var.get() or self.eeg_var.get():
+            self.device_continue_btn.config(state='normal')
+            self.device_error.config(text="")
+        else:
+            self.device_continue_btn.config(state='disabled')
+            self.device_error.config(text="Please select at least one device (EEG and/or EMG).")
+
+    def _confirm_devices(self):
+        # Save selections
+        self.use_emg = self.emg_var.get()
+        self.use_eeg = self.eeg_var.get()
+        self.device_continue_btn.config(state='disabled')
+        # Create recording session now
+        self.recorder = EmgSession(self.use_emg, self.use_eeg)
+
+        # Do quick data check before proceeding
+        if not self.quick_device_check():
+            self.device_error.config(text="Device check failed. Reboot the Syncstation and ensure the selected devices are connected."
+                                          "\n The software will now close")
+            self.root.after(3000, self.stop_session)
+        else:
+
+            # Start initial flush loop after recorder exists
+            threading.Thread(target=self._initial_flush_loop, daemon=True).start()
+
+            # Proceed to parameter screen
+            self.device_frame.destroy()
+            self._build_parameter_screen()
+
+    def quick_device_check(self):
+        try:
+            self.recorder.receive_and_ignore(2.5)
+            test_data = self.recorder.get_record(0.1)
+            if not validate_data(test_data, self.use_emg, self.use_eeg):
+                return False
+            return True
+        except Exception as e:
+            print(f"[validate_data] Caught exception: {e!r}")
+            print(f"Type: {type(e).__name__}")
+        return False
 
     def _initial_flush_loop(self):
         time.sleep(0.2)
@@ -157,7 +234,7 @@ class ExerciseApp:
         else:
             self.movement_images = movement_images_A + movement_images_B
             self.index_offset = 0
-        # Setup recorder
+        # Setup recorder (directory/id) — recorder already exists
         self.recorder.make_subject_directory(self.subject_id, exercise_set=self.exercise_set)
         self.recorder.set_id(self.subject_id)
         self.session_started = True

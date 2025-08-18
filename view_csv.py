@@ -7,8 +7,8 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "data/3/EB/csv/emg_data_11-08_2000ms_M13R1.csv"  # Put the filename here and run this python file to view.
-AMPLITUDE = 0.7                  # Adjust the amplitude here if the data goes off the edges of the graph
+FILENAME = "data/124578/EA/csv/emg_data_19-08_2000ms_M1R2.csv"  # Put the filename here and run this python file to view.
+AMPLITUDE = 0.7                 # Adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(file_path):
     """
@@ -56,5 +56,5 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    plot_channel(FILENAME, 32)
-    #plot_file(FILENAME)
+    #plot_channel(FILENAME, 32)
+    plot_file(FILENAME)
