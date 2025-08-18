@@ -10,7 +10,7 @@ class Config:
     # Set the Gain Mode here : 0 -> 8, 1 -> 4
     EMG_MODE = 0
 
-    EEG_MODE = 3
+    EEG_MODE = 0
 
     GAIN_RATIOS = {
     0: 286.1e-9,   # MODE=00 → 286.1 nV
