@@ -2,7 +2,7 @@
 class Config:
 
     READ_EMG = True
-    READ_EEG = True
+    READ_EEG = False
 
     SAVE_COUNTERS = True
     SAVE_H5 = True
