@@ -8,7 +8,7 @@ matplotlib.use('TkAgg')
 
 
 FILENAME = "data/35/eeg/EA/csv/eeg_data_08-09_2000ms_M3rest.csv"
-#FILENAME = "OTB-ORIGINAL/eeg_data_all.csv"  # Testing the OTB code
+FILENAME = "online_study/emg_online_data.csv"
 AMPLITUDE = 0.7                 # Adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(file_path):
