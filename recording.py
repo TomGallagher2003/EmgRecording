@@ -6,12 +6,11 @@ import os
 
 import numpy as np
 import time
-import h5py
-
 from util.buffer_functions import save_buffer
 from util.channel_alignment import simple_alignment
 from util.OTB_refactored.configuration_processing import calculate_crc8, validate_config, process_config
 from util.eeg_offset_util import offset_with_eeg
+from util.file_pathing import save_channels, make_subject_directory
 from util.processing import process
 from util.socket_handling import SocketHandler
 from config import Config
@@ -20,9 +19,8 @@ SAMPLE_TOLERANCE = 200
 
 class EmgSession:
     def __init__(self, use_emg, use_eeg):
-        self.USE_EMG = use_emg
-        self.USE_EEG = use_eeg
-        self.socket_handler = SocketHandler(Config.IP_ADDRESS, Config.TCP_PORT)
+        self.config = Config(use_emg, use_eeg)
+        self.socket_handler = SocketHandler(self.config.IP_ADDRESS, self.config.TCP_PORT)
         self.socket_handler.connect()
         self.conf_string = None
         self.tot_num_byte = None
@@ -37,13 +35,13 @@ class EmgSession:
 
     def start(self):
         # Validate the contents of the configuration arrays
-        validate_config(Config.DEVICE_EN, 1, "Error, set DeviceEN values equal to 0 or 1")
-        validate_config(Config.EMG, 1, "Error, set EMG values equal to 0 or 1")
-        validate_config(Config.MODE, 3, "Error, set Mode values between to 0 and 3")
+        validate_config(self.config.DEVICE_EN, 1, "Error, set DeviceEN values equal to 0 or 1")
+        validate_config(self.config.EMG, 1, "Error, set EMG values equal to 0 or 1")
+        validate_config(self.config.MODE, 3, "Error, set Mode values between to 0 and 3")
 
         # Process the configuration to get the configuration string and other required fields
         self.conf_string, conf_str_len, self.emg_channels, self.tot_num_chan, self.tot_num_byte, plotting_info = (
-            process_config(Config.DEVICE_EN, Config.EMG, Config.MODE, Config.NUM_CHAN))
+            process_config(self.config.DEVICE_EN, self.config.EMG, self.config.MODE, self.config.NUM_CHAN))
 
         # Send the configuration to syncstation
         start_command = self.conf_string[0:conf_str_len]
@@ -79,9 +77,9 @@ class EmgSession:
         else: rec_time = rest_time
 
 
-        total_samples = int(Config.SAMPLE_FREQUENCY * rec_time)
+        total_samples = int(self.config.SAMPLE_FREQUENCY * rec_time)
         expected_bytes = self.tot_num_byte * total_samples
-        data = np.zeros((self.tot_num_chan, int(Config.SAMPLE_FREQUENCY * rec_time)))
+        data = np.zeros((self.tot_num_chan, int(self.config.SAMPLE_FREQUENCY * rec_time)))
 
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
@@ -95,12 +93,11 @@ class EmgSession:
             if not data_temp:
                 break
             data_buffer += data_temp
-        save_buffer(data_buffer, f"test_buffer{self.ind}.bin")
         self.ind +=1
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
-        if not self.USE_EEG:
+        if not self.config.USE_EEG:
             offset = simple_alignment(data_buffer)
         else:
             offset = offset_with_eeg(data_buffer)
@@ -120,30 +117,30 @@ class EmgSession:
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
 
         num_samples = temp.shape[1]
-        expected_samples = Config.SAMPLE_FREQUENCY * rec_time
+        expected_samples = self.config.SAMPLE_FREQUENCY * rec_time
 
         if num_samples != expected_samples and expected_samples - num_samples < SAMPLE_TOLERANCE:
             data = np.zeros((self.tot_num_chan, num_samples))
             print(f"Allowed {num_samples} samples")
 
-        data = process(temp, data, self.tot_num_byte, chan_ready)
+        data = process(self.config, temp, data, self.tot_num_byte, chan_ready)
 
-        labels = np.array([movement] * int(perform_time * Config.SAMPLE_FREQUENCY) + [0] * int(rest_time * Config.SAMPLE_FREQUENCY))
-        labels = labels if is_movement else np.array([0] * int(rest_time * Config.SAMPLE_FREQUENCY))
+        labels = np.array([movement] * int(perform_time * self.config.SAMPLE_FREQUENCY) + [0] * int(rest_time * self.config.SAMPLE_FREQUENCY))
+        labels = labels if is_movement else np.array([0] * int(rest_time * self.config.SAMPLE_FREQUENCY))
 
 
         suffix = f"M{movement}R{rep}" if is_movement else f"M{movement}rest"
         exercise_group = "EA" if movement < 13 else "EB"
 
-        if self.USE_EMG:
-            self.save_channels(data[Config.MUOVI_EMG_CHANNELS], labels, "emg", perform_time, exercise_group, suffix)
+        if self.config.USE_EMG:
+            self.save_channels(data[self.config.MUOVI_EMG_CHANNELS], labels, "emg", perform_time, exercise_group, suffix)
 
-        if self.USE_EEG:
-            self.save_channels(data[Config.MUOVI_PLUS_EEG_CHANNELS], labels, "eeg", perform_time, exercise_group, suffix)
+        if self.config.USE_EEG:
+            self.save_channels(data[self.config.MUOVI_PLUS_EEG_CHANNELS], labels, "eeg", perform_time, exercise_group, suffix)
 
-        if Config.SAVE_COUNTERS and self.USE_EMG and self.USE_EEG:
-            self.save_channels(np.array([data[Config.SYNCSTATION_COUNTER_CHANNEL], data[Config.MUOVI_COUNTER_CHANNEL],
-                                         data[Config.MUOVI_PLUS_COUNTER_CHANNEL]]), labels, "counters", perform_time, exercise_group,
+        if self.config.SAVE_COUNTERS and self.config.USE_EMG and self.config.USE_EEG:
+            self.save_channels(np.array([data[self.config.SYNCSTATION_COUNTER_CHANNEL], data[self.config.MUOVI_COUNTER_CHANNEL],
+                                         data[self.config.MUOVI_PLUS_COUNTER_CHANNEL]]), labels, "counters", perform_time, exercise_group,
                                suffix)
 
         gc.collect()
@@ -163,7 +160,7 @@ class EmgSession:
 
     def make_directory(self):
 
-        dir_path = Config.DATA_DESTINATION_PATH
+        dir_path = self.config.DATA_DESTINATION_PATH
 
         # Check if it exists and is a directory
         if not os.path.isdir(dir_path):
@@ -174,67 +171,28 @@ class EmgSession:
             print(f"Directory already exists: {dir_path}")
 
     def make_subject_directory(self, subject_id, exercise_set):
-
-        dir_path = Path(Config.DATA_DESTINATION_PATH) / f'{subject_id}'
-        # Check if it exists and is a directory
-        if not os.path.isdir(dir_path):
-            # Create the directory (and any missing parent directories)
-            os.makedirs(dir_path)
-            if self.USE_EMG:
-                if exercise_set == "A" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'emg' / 'EA')
-                    os.makedirs(dir_path / 'emg' / 'EA' / 'csv')
-                    os.makedirs(dir_path / 'emg' / 'EA' / 'hdf5')
-
-                if exercise_set == "B" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'emg' / 'EB')
-                    os.makedirs(dir_path / 'emg' / 'EB' / 'csv')
-                    os.makedirs(dir_path / 'emg' / 'EB' / 'hdf5')
-            if self.USE_EEG:
-                if exercise_set == "A" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'eeg' / 'EA')
-                    os.makedirs(dir_path / 'eeg' / 'EA' / 'csv')
-                    os.makedirs(dir_path / 'eeg' / 'EA' / 'hdf5')
-
-                if exercise_set == "B" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'eeg' / 'EB')
-                    os.makedirs(dir_path / 'eeg' / 'EB' / 'csv')
-                    os.makedirs(dir_path / 'eeg' / 'EB' / 'hdf5')
-            if Config.SAVE_COUNTERS:
-                if exercise_set == "A" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'counters' / 'EA')
-                    os.makedirs(dir_path / 'counters' / 'EA' / 'csv')
-                    os.makedirs(dir_path / 'counters' / 'EA' / 'hdf5')
-
-                if exercise_set == "B" or exercise_set == "AB":
-                    os.makedirs(dir_path / 'counters' / 'EB')
-                    os.makedirs(dir_path / 'counters' / 'EB' / 'csv')
-                    os.makedirs(dir_path / 'counters' / 'EB' / 'hdf5')
-            print(f"Created directory: {dir_path}")
-
-
-        else:
-            print(f"Directory already exists: {dir_path}")
-
+        make_subject_directory(
+            self.config.DATA_DESTINATION_PATH,
+            subject_id,
+            exercise_set,
+            use_emg=self.config.USE_EMG,
+            use_eeg=self.config.USE_EEG,
+            save_counters=self.config.SAVE_COUNTERS
+        )
 
     def save_channels(self, data, labels, type_string, perform_time, exercise_group, suffix):
-
-        destination_path = Path(Config.DATA_DESTINATION_PATH)
-
-        np.savetxt(
-            destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "csv" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
-            data.transpose(), delimiter=',')
-        np.savetxt(
-            destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "csv" / f"{type_string}_label_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.csv",
-            labels.transpose(), delimiter=',')
-        # np.savetxt(destination_path / "csv" / f"sample_counter_ID{self.id}_{self.dateString}_{suffix}.csv", syncstation_sample_counter, delimiter=',')
-
-        if Config.SAVE_H5:
-            with h5py.File(
-                    destination_path / f'{self.id}' / f"{type_string}" / exercise_group / "hdf5" / f"{type_string}_data_{self.dateString}_{int(perform_time * 1000)}ms_{suffix}.h5",
-                    'w') as hf:
-                hf.create_dataset('{type_string}_data', data=data.transpose())
-                hf.create_dataset("{type_string}_label", data=labels)
+        save_channels(
+            self.config.DATA_DESTINATION_PATH,
+            self.id,
+            type_string,
+            exercise_group,
+            perform_time,
+            suffix,
+            data,
+            labels,
+            save_h5=self.config.SAVE_H5,
+            date_str=self.dateString
+        )
 
     def get_record(self, rec_time):
 
@@ -249,9 +207,9 @@ class EmgSession:
                 break
             data_buffer += data_temp
 
-        total_samples = int(Config.SAMPLE_FREQUENCY * rec_time)
+        total_samples = int(self.config.SAMPLE_FREQUENCY * rec_time)
         expected_bytes = self.tot_num_byte * total_samples
-        data = np.zeros((self.tot_num_chan, int(Config.SAMPLE_FREQUENCY * rec_time)))
+        data = np.zeros((self.tot_num_chan, int(self.config.SAMPLE_FREQUENCY * rec_time)))
 
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
@@ -266,7 +224,7 @@ class EmgSession:
                 break
             data_buffer += data_temp
         self.recording = False
-        if not self.USE_EEG:
+        if not self.config.USE_EEG:
             offset = simple_alignment(data_buffer)
         else:
             offset = offset_with_eeg(data_buffer)
@@ -283,5 +241,6 @@ class EmgSession:
 
         temp_array = np.frombuffer(data_buffer, dtype=np.uint8)
         temp = np.reshape(temp_array, (-1, self.tot_num_byte)).T  # dynamic reshape
-        data = process(temp, data, self.tot_num_byte, chan_ready)
+        data = np.zeros((self.tot_num_chan, temp.shape[1]))
+        data = process(self.config, temp, data, self.tot_num_byte, chan_ready)
         return data

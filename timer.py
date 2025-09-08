@@ -5,49 +5,16 @@ from PIL import Image, ImageTk
 import threading
 from recording import EmgSession
 from util.data_validation import validate_data
+from util.images import Images
 
 # Window dimensions for both parameter and main screens
 SIZE = 100
 WINDOW_WIDTH = 10 * SIZE
 WINDOW_HEIGHT = 6 * SIZE
 
-# Movement image lists for sets A and B
-movement_images_A = [
-    "movement_library/EA/Index_flexion_M1.png",
-    "movement_library/EA/Index_Extension_M2.png",
-    "movement_library/EA/Middle_Flexion_M3.png",
-    "movement_library/EA/Middle_Extension_M4.png",
-    "movement_library/EA/Ring_Flexion_M5.png",
-    "movement_library/EA/Ring_Extension_M6.png",
-    "movement_library/EA/Little_Flexion_M7.png",
-    "movement_library/EA/Little_Extension_M8.png",
-    "movement_library/EA/Thurmb_Adduction_M9.png",
-    "movement_library/EA/Thurmb_Abduction_M10.png",
-    "movement_library/EA/Thurmb_Flexion_M11.png",
-    "movement_library/EA/Thurmb_Extension_M12.png"
-]
-movement_images_B = [
-    "movement_library/EB/Thrumb_up_M13.png",
-    "movement_library/EB/Extension_of_index_and_middle_M14.PNG.png",
-    "movement_library/EB/Flexion_of_little_and_ring_M15.PNG.png",
-    "movement_library/EB/Thumb_opposing_of base_of_little_finger_M16.PNG.png",
-    "movement_library/EB/hands_open_M17.PNG.png",
-    "movement_library/EB/Fingures_fixed_together_in_fist_M18.PNG.png",
-    "movement_library/EB/pointing_index_M19.PNG.png",
-    "movement_library/EB/adduction_of_extended_fingers_M20.PNG.png",
-    "movement_library/EB/wrist_supination_middile_finger_M21.PNG.png",
-    "movement_library/EB/wrist_pronation_M22.PNG.png",
-    "movement_library/EB/wrist_supination_little_finger_M23.PNG.png",
-    "movement_library/EB/wrist_pronation_little_finger_M24.PNG.png",
-    "movement_library/EB/wrist_flexion_M25.PNG.png",
-    "movement_library/EB/wrist_extension_M26.PNG.png",
-    "movement_library/EB/wrist_radial_deviation_M27.PNG.png",
-    "movement_library/EB/wrist_ular_deviation_M28.PNG.png",
-    "movement_library/EB/wrist_extension_with_closed_hand_M29.PNG.png"
-]
 
 # Rest image filename
-rest_image = "movement_library/Rest_M0.png"
+rest_image = Images.REST
 
 class ExerciseApp:
     def __init__(self, root):
@@ -226,13 +193,13 @@ class ExerciseApp:
         self.exercise_set = self.exercise_set_var.get()
         # Configure movement list
         if self.exercise_set == 'A':
-            self.movement_images = movement_images_A
+            self.movement_images = Images.MOVEMENT_IMAGES_A
             self.index_offset = 0
         elif self.exercise_set == 'B':
-            self.movement_images = movement_images_B
+            self.movement_images = Images.MOVEMENT_IMAGES_B
             self.index_offset = 12
         else:
-            self.movement_images = movement_images_A + movement_images_B
+            self.movement_images = Images.MOVEMENT_IMAGES_A + Images.MOVEMENT_IMAGES_B
             self.index_offset = 0
         # Setup recorder (directory/id) — recorder already exists
         self.recorder.make_subject_directory(self.subject_id, exercise_set=self.exercise_set)

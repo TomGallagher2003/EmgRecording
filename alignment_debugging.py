@@ -13,6 +13,8 @@ from config import Config
 # === User configuration: define your raw buffer file here ===
 BUFFER_FILE = Path("test/buffers", "buffer_both_M3R2.bin")
 
+config = Config(True, True)
+
 
 def load_and_align_buffer(buffer_file: Path):
     """
@@ -46,9 +48,9 @@ def process_buffer(raw: bytes, tot_num_byte: int, tot_num_chan: int):
 
     # Per-device data
     for DevId in range(16):
-        if Config.DEVICE_EN[DevId] != 1:
+        if config.DEVICE_EN[DevId] != 1:
             continue
-        if Config.EMG[DevId] == 1:
+        if config.EMG[DevId] == 1:
             # EMG channels
             ch_ind = np.arange(0, 33*2, 2)
             ch_ind_aux = np.arange(33*2, 38*2, 2)
@@ -59,14 +61,14 @@ def process_buffer(raw: bytes, tot_num_byte: int, tot_num_chan: int):
             neg = sub >= 32768
             sub[neg] -= 65536
             # convert to mV
-            sub = sub * Config.EMG_GAIN_RATIOS[Config.EMG_MODE] * 1e3
+            sub = sub * config.EMG_GAIN_RATIOS[config.EMG_MODE] * 1e3
 
             data[chan_idx:chan_idx+33, :] = sub
             data[chan_idx+33:chan_idx+38, :] = sub_aux
-            chan_idx += Config.NUM_CHAN[DevId]
+            chan_idx += config.NUM_CHAN[DevId]
         else:
             # EEG channels
-            start = Config.MUOVI_PLUS_EEG_CHANNELS[0] * 2
+            start = config.MUOVI_PLUS_EEG_CHANNELS[0] * 2
             ch_ind = np.arange(start, start + 64*3, 3)
             ch_ind_aux = np.arange(start + 64*3, start + 64*3 + 6*3, 3)
             sub = (temp[ch_ind].astype(np.int32) * 65536 +
@@ -81,7 +83,7 @@ def process_buffer(raw: bytes, tot_num_byte: int, tot_num_chan: int):
 
             data[chan_idx:chan_idx+64, :] = sub
             data[chan_idx+64:chan_idx+70, :] = sub_aux
-            chan_idx += Config.NUM_CHAN[DevId]
+            chan_idx += config.NUM_CHAN[DevId]
 
     # syncstation auxiliary channels
     aux_start = tot_num_byte - (6 * 2)
@@ -96,8 +98,8 @@ def plot_alignment(data: np.ndarray):
     """
     Plot key channels to visualize alignment with wider figures.
     """
-    sync_counter = data[Config.SYNCSTATION_CHANNELS[-1]]
-    print("syncstation counter index:", Config.SYNCSTATION_CHANNELS[-1])
+    sync_counter = data[config.SYNCSTATION_CHANNELS[-1]]
+    print("syncstation counter index:", config.SYNCSTATION_CHANNELS[-1])
     print("Data shape:", data.shape)
 
     # Wider figure for counters
@@ -131,7 +133,7 @@ def plot_alignment(data: np.ndarray):
 # === Run alignment test ===
 raw, offset = load_and_align_buffer(BUFFER_FILE)
 _, _, _, tot_num_chan, tot_num_byte, _ = process_config(
-    Config.DEVICE_EN, Config.EMG, Config.MODE, Config.NUM_CHAN
+    config.DEVICE_EN, config.EMG, config.MODE, config.NUM_CHAN
 )
 data = process_buffer(raw, tot_num_byte, tot_num_chan)
 plot_alignment(data)
