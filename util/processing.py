@@ -39,7 +39,7 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
                 data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EEG_MODE] * 1e3
-                data_sub_matrix = eeg_highpass_filter(data_sub_matrix, cutoff=0.1)
+                #data_sub_matrix = eeg_highpass_filter(data_sub_matrix, cutoff=5)
 
 
                 data[chan_ready:chan_ready + 64, :] = data_sub_matrix

@@ -7,9 +7,9 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "data/35/eeg/EA/csv/eeg_data_08-09_2000ms_M3rest.csv"
-#FILENAME = "OTB-ORIGINAL/eeg_data_all.csv"  # Testing the OTB code
-AMPLITUDE = 0.7                 # Adjust the amplitude here if the data goes off the edges of the graph
+FILENAME = "data/35/eeg/EA/csv/eeg_data_08-09_2000ms_M1R2.csv"
+#FILENAME = "online_study/emg_online_data.csv"
+AMPLITUDE = 10               # Adjust the amplitude here if the data goes off the edges of the graph
 
 def plot_file(file_path):
     """
@@ -56,5 +56,5 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    #plot_channel(FILENAME, 63)
+    #plot_channel(FILENAME, 5)
     plot_file(FILENAME)
