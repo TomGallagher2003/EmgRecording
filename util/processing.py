@@ -1,7 +1,5 @@
 import numpy as np
 from config import Config
-from util.filters import eeg_highpass_filter
-
 
 def process(config, temp, data, tot_num_byte, chan_ready):
     # Processing data
