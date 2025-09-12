@@ -7,9 +7,9 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "data/35/eeg/EA/csv/eeg_data_08-09_2000ms_M1R2.csv"
-#FILENAME = "online_study/emg_online_data.csv"
-AMPLITUDE = 10               # Adjust the amplitude here if the data goes off the edges of the graph
+FILENAME = "eeg_debug_filtered_converted.csv"
+MICRO_VOLTS = True           # When set to 'False', the default unit plotted is millivolts
+AMPLITUDE = 10               # In mV, will be converted to µV when plotting in microvolts
 
 def plot_file(file_path):
     """
@@ -20,6 +20,10 @@ def plot_file(file_path):
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
 
+    amplitude = AMPLITUDE
+    if MICRO_VOLTS:
+        data = data * 1e3
+        amplitude = amplitude * 1e3
     print(data.shape)
 
     plt.clf()
@@ -28,7 +32,7 @@ def plot_file(file_path):
     X = 0
 
     for j, emg_signal in enumerate(data):
-        axes[j].set_ylim(-1 * AMPLITUDE, AMPLITUDE)
+        axes[j].set_ylim(-1 * amplitude, amplitude)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
@@ -44,9 +48,14 @@ def plot_channel(file_path, channel=1):
 
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
-    print(data[channel-1][0:5])
+    unit_label = "mV"
+    if MICRO_VOLTS:
+        data = data * 1e3
+        unit_label = "µV"
+
     plt.clf()
     plt.figure(figsize=(15, 5))
+    plt.ylabel(unit_label)
 
     plt.plot(data[channel-1])
 
@@ -56,5 +65,5 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    #plot_channel(FILENAME, 5)
-    plot_file(FILENAME)
+    plot_channel(FILENAME, 14)
+    #plot_file(FILENAME)
