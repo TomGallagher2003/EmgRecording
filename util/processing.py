@@ -1,5 +1,7 @@
 import numpy as np
 from config import Config
+from util.filters import preprocess_eeg
+
 
 def process(config, temp, data, tot_num_byte, chan_ready):
     # Processing data
@@ -17,7 +19,7 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
                 # converting raw volts to mV using the ratios from the documentation
-                # data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EMG_MODE] * 1e3
+                data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EMG_MODE] * 1e3
 
                 data[chan_ready:chan_ready + 32, :] = data_sub_matrix
                 data[chan_ready + 32:chan_ready + 38, :] = data_sub_matrix_aux
@@ -36,6 +38,12 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 # Search for the negative values and make the two's complement
                 ind = np.where(data_sub_matrix >= 8388608)
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
+
+                #Apply the filtering pipeline (Bandpass 0.3Hz-70Hz and Bandstop to remove line noise at 50Hz)
+                data_sub_matrix = preprocess_eeg(data_sub_matrix)
+
+                # converting raw volts to mV using the ratios from the documentation
+                data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EEG_MODE] * 1e3
 
 
                 data[chan_ready:chan_ready + 64, :] = data_sub_matrix

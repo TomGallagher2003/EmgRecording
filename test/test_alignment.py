@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 
+from config import Config
 from util.buffer_functions import load_buffer
 from util.eeg_offset_util import offset_with_eeg  # updated version above
 from util.processing import process
@@ -66,7 +67,7 @@ def test_alignment(num, verbose=True, num_samples=default_num_samples, thresh_st
     temp_array = np.frombuffer(buffer, dtype=np.uint8)
     temp = np.reshape(temp_array, (-1, tot_num_byte)).T
     data = np.zeros((tot_num_chan, frames), dtype=np.float64)
-    data = process(temp, data, tot_num_byte, chan_ready=0)
+    data = process(Config(False, True), temp, data, tot_num_byte, chan_ready=0)
 
     # 4) counters: 37 (period=1), 108 (period=4), tail auto (period=1)
     counters = [(37, 1), (108, 4)]
