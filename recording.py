@@ -84,7 +84,7 @@ class EmgSession:
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
-        chunk_size = 512
+        chunk_size = self.tot_num_byte * 8
         start_time = time.time()
         self.recording = True
 
@@ -97,10 +97,13 @@ class EmgSession:
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
+        #with open(f"test\\buffers\\test_buffer{movement}{rep}.bin", "wb") as f:
+            #f.write(data_buffer)
         if not self.config.USE_EEG:
             offset = simple_alignment(data_buffer)
         else:
             offset = offset_with_eeg(data_buffer)
+            offset = 0
         if offset != 0:
             data_buffer = data_buffer[:-offset]
         sample_size = self.tot_num_byte
@@ -197,7 +200,7 @@ class EmgSession:
     def get_record(self, rec_time):
 
         data_buffer = b""
-        chunk_size = 512
+        chunk_size = self.tot_num_byte * 8
         start_time = time.time()
         self.recording = True
 
@@ -214,7 +217,7 @@ class EmgSession:
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
-        chunk_size = 512
+        chunk_size = self.tot_num_byte * 8
         start_time = time.time()
         self.recording = True
 
