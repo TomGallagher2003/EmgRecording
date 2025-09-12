@@ -2,6 +2,12 @@ import socket
 import struct
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+
+from config import Config
+from util.processing import process
+
+matplotlib.use('TkAgg')
 
 
 # Function to calculate CRC8
@@ -34,7 +40,7 @@ def CRC8(Vector, Len):
 
 # Configuration parameters
 TCPPort = 54320
-NumCycles = 10
+NumCycles = 4
 OffsetEMG = 1000
 PlotTime = 1
 
@@ -165,6 +171,8 @@ tcpSocket.settimeout(10)
 fig = plt.figure()
 plt.xlim([0, sampFreq * PlotTime])
 
+all_cycles = []
+
 for i in range(NumCycles):
     plt.cla()
     print(i)
@@ -184,43 +192,8 @@ for i in range(NumCycles):
     TempArray = np.frombuffer(data_buffer, dtype=np.uint8)
     Temp = np.reshape(TempArray, (sampFreq * PlotTime, TotNumByte)).T
 
-    for DevId in range(16):
-        if DeviceEN[DevId] == 1:
-            if EMG[DevId] == 1:
-                ChInd = np.arange(0, NumChan[DevId] * 2, 2)
-                DataSubMatrix = Temp[ChInd]*256 + Temp[ChInd+1]
 
-                # Search for the negative values and make the two's complement
-                ind = np.where(DataSubMatrix >= 32768)
-                DataSubMatrix[ind] = DataSubMatrix[ind] - 65536
-
-                data[ChanReady:ChanReady + NumChan[DevId], :] = DataSubMatrix
-            else:
-                ChInd = np.arange(0, NumChan[DevId] * 3, 3)
-                DataSubMatrix = Temp[ChInd] * 65536 + Temp[ChInd + 1] * 256 + Temp[ChInd + 2]
-
-                # Search for the negative values and make the two's complement
-                ind = np.where(DataSubMatrix >= 8388608)
-                DataSubMatrix[ind] = DataSubMatrix[ind] - 16777216
-
-                data[ChanReady:ChanReady + NumChan[DevId], :] = DataSubMatrix
-
-            del ChInd
-            del ind
-            del DataSubMatrix
-            ChanReady += NumChan[DevId]
-
-    AUXStartingByte = TotNumByte - (6*2)
-    ChInd = np.arange(AUXStartingByte, AUXStartingByte+12, 2)
-    DataSubMatrix = Temp[ChInd] * 256 + Temp[ChInd + 1]
-
-    # Search for the negative values and make the two's complement
-    ind = np.where(DataSubMatrix >= 32768)
-    DataSubMatrix[ind] = DataSubMatrix[ind] - 65536
-
-    data[ChanReady:ChanReady + 6, :] = DataSubMatrix
-    del ind
-    del DataSubMatrix
+    data = process(Config(False, True), Temp, data, TotNumByte, ChanReady)
 
     # Aggiornamento istruzioni per il tracciamento del grafico
     k = 0
@@ -252,9 +225,17 @@ for i in range(NumCycles):
     for j in SyncStatChan:
         #lineSyncChannel.set_data(data[j, :], np.linspace(0, 1, len(data[j, :])))
         plt.plot(data[j, :])
-
+    all_cycles.append(data.copy().transpose())
     plt.pause(0.01)  # Pausa per consentire il rendering e l'aggiornamento dei plot
     plt.draw()
+
+
+# Saving
+all_cycles = np.array(all_cycles)  # shape = (NumCycles, TotNumChan+1, sampFreq*PlotTime)
+C, R, T = all_cycles.shape   # cycles, channels, time
+csv_2d = all_cycles.reshape(C * R, T)
+np.savetxt("eeg_debug.csv", csv_2d, delimiter=",")
+print("All cycles saved to emg_data_all.csv")
 
 
 print("Cicli finiti")
