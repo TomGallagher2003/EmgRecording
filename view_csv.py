@@ -70,5 +70,12 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    plot_channel(FILENAME, 14)
+    #plot_channel(FILENAME, 12)
+
+    plot_channel("unplugged_eeg_debug_filtered.csv", 12)
+    plot_channel("data\\1091\eeg\EA\csv\eeg_data_12-09_2000ms_M1R1_filtered.csv", 12)
+
+    plot_channel("unplugged_eeg_debug_filtered_converted.csv", 12)
+    plot_channel("data\\1091\eeg\EA\csv\eeg_data_12-09_2000ms_M1R1_filtered_converted.csv", 12)
+
     #plot_file(FILENAME)
