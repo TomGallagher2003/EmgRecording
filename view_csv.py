@@ -7,9 +7,12 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "eeg_debug_filtered_converted.csv"
-MICRO_VOLTS = True           # When set to 'False', the default unit plotted is millivolts
+FILENAME = "data\emg_and_eeg_from_timer\eeg\EA\csv\eeg_data_13-09_2000ms_M1R1.csv"
 AMPLITUDE = 10               # In mV, will be converted to µV when plotting in microvolts
+
+MICRO_VOLTS = False
+if FILENAME.split("\\")[-1].startswith("eeg"):
+    MICRO_VOLTS = True
 
 def plot_file(file_path):
     """
@@ -70,12 +73,5 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    #plot_channel(FILENAME, 12)
-
-    plot_channel("unplugged_eeg_debug_filtered.csv", 12)
-    plot_channel("data\\1091\eeg\EA\csv\eeg_data_12-09_2000ms_M1R1_filtered.csv", 12)
-
-    plot_channel("unplugged_eeg_debug_filtered_converted.csv", 12)
-    plot_channel("data\\1091\eeg\EA\csv\eeg_data_12-09_2000ms_M1R1_filtered_converted.csv", 12)
-
+    plot_channel(FILENAME, 12)
     #plot_file(FILENAME)
