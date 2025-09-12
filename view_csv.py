@@ -26,6 +26,7 @@ def plot_file(file_path):
         amplitude = amplitude * 1e3
     print(data.shape)
 
+
     plt.clf()
     fig, axes = plt.subplots(nrows=data.shape[0], ncols=1, figsize=(16, 16), sharex=True)
     fig.suptitle(f'file: {file_path}', fontsize=16)
@@ -49,9 +50,13 @@ def plot_channel(file_path, channel=1):
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
     unit_label = "mV"
-    if MICRO_VOLTS:
+    if max([max(x) for x in data[5:20]]) > 500:
+        unit_label = "raw input"
+    elif MICRO_VOLTS:
         data = data * 1e3
         unit_label = "µV"
+    
+    
 
     plt.clf()
     plt.figure(figsize=(15, 5))
