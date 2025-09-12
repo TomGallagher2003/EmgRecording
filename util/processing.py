@@ -17,7 +17,7 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
                 # converting raw volts to mV using the ratios from the documentation
-                data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EMG_MODE] * 1e3
+                # data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EMG_MODE] * 1e3
 
                 data[chan_ready:chan_ready + 32, :] = data_sub_matrix
                 data[chan_ready + 32:chan_ready + 38, :] = data_sub_matrix_aux
@@ -30,14 +30,12 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 data_sub_matrix = temp[ch_ind].astype(np.int32) * 65536 + temp[ch_ind + 1].astype(np.int32) * 256 + \
                                   temp[ch_ind + 2].astype(np.int32)
 
-                data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32)
+                data_sub_matrix_aux = temp[ch_ind_aux].astype(np.int32) * 65536 + temp[ch_ind_aux + 1].astype(np.int32) * 256 + \
+                                  temp[ch_ind_aux + 2].astype(np.int32)
 
                 # Search for the negative values and make the two's complement
                 ind = np.where(data_sub_matrix >= 8388608)
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
-
-                data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EEG_MODE] * 1e3
-                #data_sub_matrix = eeg_highpass_filter(data_sub_matrix, cutoff=5)
 
 
                 data[chan_ready:chan_ready + 64, :] = data_sub_matrix
