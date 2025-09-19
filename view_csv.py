@@ -7,7 +7,7 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = "data\emg_and_eeg_from_timer\eeg\EA\csv\eeg_data_13-09_2000ms_M1R1.csv"
+FILENAME = ""                           # Set your file name here
 SINGLE_CHANNEL_MODE = False
 CHANNEL = 12
 
@@ -19,7 +19,7 @@ CHANNEL_LIST = []
 
 
 
-AMPLITUDE = 1               # In mV, will be converted to µV when plotting in microvolts
+AMPLITUDE_IN_MILLIVOLTS = 1               # Only affects multi-channel mode. Adjust as necessary
 
 
 MICRO_VOLTS = False
@@ -38,7 +38,7 @@ def plot_file(file_path, channel_list=[]):
         data = data[channel_list]
 
 
-    amplitude = AMPLITUDE
+    amplitude = AMPLITUDE_IN_MILLIVOLTS
     if MICRO_VOLTS:
         data = data * 1e3
         amplitude = amplitude * 1e3
