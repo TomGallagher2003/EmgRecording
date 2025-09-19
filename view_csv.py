@@ -8,13 +8,25 @@ matplotlib.use('TkAgg')
 
 
 FILENAME = "data\emg_and_eeg_from_timer\eeg\EA\csv\eeg_data_13-09_2000ms_M1R1.csv"
-AMPLITUDE = 10               # In mV, will be converted to µV when plotting in microvolts
+SINGLE_CHANNEL_MODE = False
+CHANNEL = 12
+
+START_CHANNEL = 10
+NUM_CHANNELS = 5
+
+CHANNEL_LIST = []
+
+
+
+
+AMPLITUDE = 1               # In mV, will be converted to µV when plotting in microvolts
+
 
 MICRO_VOLTS = False
 if FILENAME.split("\\")[-1].startswith("eeg"):
     MICRO_VOLTS = True
 
-def plot_file(file_path):
+def plot_file(file_path, channel_list=[]):
     """
     Plots the given emg data file.
     """
@@ -22,6 +34,9 @@ def plot_file(file_path):
 
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
+    if len(channel_list) > 0:
+        data = data[channel_list]
+
 
     amplitude = AMPLITUDE
     if MICRO_VOLTS:
@@ -73,5 +88,12 @@ def plot_channel(file_path, channel=1):
 
 if __name__ == '__main__':
 
-    plot_channel(FILENAME, 12)
-    #plot_file(FILENAME)
+
+    if SINGLE_CHANNEL_MODE:
+        plot_channel(FILENAME, CHANNEL)
+    elif len(CHANNEL_LIST) > 0:
+        plot_file(FILENAME,  CHANNEL_LIST)
+    elif START_CHANNEL and NUM_CHANNELS:
+        plot_file(FILENAME, range(START_CHANNEL, START_CHANNEL + NUM_CHANNELS))
+    else:
+        plot_file(FILENAME)
