@@ -3,7 +3,9 @@ import os
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtGui import QMovie, QPixmap, QPainter, QPen, QColor
 from PyQt5.QtCore import Qt, QTimer, QRectF
-from config import Config
+
+from util.images import Images
+
 
 class RadialProgress(QWidget):
     def __init__(self, diameter=100, thickness=8, parent=None):
@@ -108,7 +110,7 @@ class GifExerciseViewer(QWidget):
         self.timer_label.setStyleSheet("color: black; font-size: 24px;")
 
         self.gif_list = gif_list
-        self.preview_images = Config.MOVEMENT_IMAGES_A + Config.MOVEMENT_IMAGES_B
+        self.preview_images = Images.MOVEMENT_IMAGES_A + Images.MOVEMENT_IMAGES_B
         self.current_index = 0
         self.current_repeat = -1
         self.movie = None
