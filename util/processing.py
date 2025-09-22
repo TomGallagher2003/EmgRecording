@@ -1,9 +1,41 @@
+"""Processing functions for decoding raw EMG/EEG data streams.
+
+This module converts raw byte buffers from the Muovi devices into
+scaled EMG/EEG channel values in millivolts. Handles both EMG and
+EEG devices, applies two’s complement conversion, scaling by gain
+ratios, and filtering for EEG signals.
+"""
+
 import numpy as np
 from config import Config
 from util.filters import preprocess_eeg
 
 
 def process(config, temp, data, tot_num_byte, chan_ready):
+    """Decode and process raw EMG/EEG bytes into channel data.
+
+    Args:
+        config (Config): Configuration object containing channel maps,
+            gain ratios, device enables, and mode flags.
+        temp (np.ndarray): 1D array of raw byte values for one frame.
+        data (np.ndarray): Output 2D array where processed channel
+            values are written.
+        tot_num_byte (int): Total number of bytes expected in the frame.
+        chan_ready (int): Starting index in `data` for the next block
+            of processed channels.
+
+    Returns:
+        np.ndarray: Updated `data` array with processed EMG/EEG and
+            auxiliary channel values.
+
+    Notes:
+        - EMG data are 16-bit samples (2 bytes/channel).
+        - EEG data are 24-bit samples (3 bytes/channel).
+        - EEG channels are filtered with a 0.3–70 Hz bandpass and
+          50 Hz notch filter via `preprocess_eeg`.
+        - Both EMG and EEG signals are converted to millivolts.
+    """
+
     # Processing data
     for DevId in range(16):
         if config.DEVICE_EN[DevId] == 1:

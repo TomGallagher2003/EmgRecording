@@ -1,7 +1,74 @@
-""" Defines the Configurations for data collection"""
+"""Configuration definitions for synchronized EMG/EEG data collection.
+
+Exposes the `Config` class, which centralizes hardware enable flags,
+channel maps, sample rate, network settings, gain modes, file paths,
+and other runtime parameters used by the recording pipeline.
+"""
+
 class Config:
+    """Experiment/runtime configuration for EMG/EEG acquisition.
+
+    This class captures device enable flags, channel layouts, sample rate,
+    IP/port for the SyncStation, gain mode settings, filesystem paths, and
+    derived indices (e.g., which channels map to EMG, EEG, AUX, and counters).
+
+    Attributes:
+        USE_EMG (bool): Enable EMG device/channels.
+        USE_EEG (bool): Enable EEG device/channels.
+        SAVE_COUNTERS (bool): Save SyncStation/Muovi counter channels.
+        SAVE_H5 (bool): Save HDF5 outputs in addition to CSV (if applicable).
+
+        EMG_MODE (int): EMG gain mode (0 → gain 8, 1 → gain 4; 2/3 test).
+        EEG_MODE (int): EEG gain mode (same encoding as EMG_MODE).
+        GAIN_RATIOS (dict[int, float]): Mode→volts-per-count scale factors.
+
+        DEVICE_EN (list[int]): Per-device enable mask (1=on, 0=off);
+            EMG at index 0, EEG at index 4 (others reserved).
+        EMG (list[int]): Per-channel enable mask for EMG device group.
+        MODE (list[int]): Per-device mode values; EMG_MODE at index 0,
+            EEG_MODE at index 4 (others reserved).
+
+        TCP_PORT (int): SyncStation TCP port.
+        IP_ADDRESS (str): SyncStation IP address.
+        SAMPLE_FREQUENCY (int): Sampling rate in Hz for EMG/EEG streams.
+        OFFSET_EMG (int): Optional EMG DC offset correction (counts).
+        PLOT_TIME (int): Default window length for plotting (seconds).
+
+        DATA_DESTINATION_PATH (str): Directory for signal outputs.
+        LABEL_DESTINATION_PATH (str): Directory for label files.
+        IMAGE_SOURCE_PATH (str): Directory for movement cue images.
+
+        NUM_CHAN (list[int]): Bytes-per-device channel counts in stream order.
+
+        MUOVI_EMG_CHANNELS (list[int]): Index range of EMG channels.
+        MUOVI_AUX_CHANNELS (list[int]): Index range of EMG AUX channels.
+        MUOVI_PLUS_EEG_CHANNELS (list[int]): Index range of EEG channels.
+        MUOVI_PLUS_AUX_CHANNELS (list[int]): Index range of EEG AUX channels.
+        SYNCSTATION_CHANNELS (list[int]): Index range of SyncStation channels.
+
+        SYNCSTATION_COUNTER_CHANNEL (int): SyncStation counter channel index.
+        MUOVI_COUNTER_CHANNEL (int): EMG-device counter channel index.
+        MUOVI_PLUS_COUNTER_CHANNEL (int): EEG-device counter channel index.
+    """
+
 
     def __init__(self, use_emg, use_eeg):
+        """Initialize configuration with chosen devices and derive channel maps.
+
+        Args:
+            use_emg (bool): Whether to enable EMG acquisition.
+            use_eeg (bool): Whether to enable EEG acquisition.
+
+        Notes:
+            - `DEVICE_EN`, `EMG`, and `MODE` arrays are structured for the
+              underlying firmware protocol: EMG settings are at index 0,
+              EEG settings at index 4. Other indices are reserved.
+            - Channel index lists (e.g., `MUOVI_EMG_CHANNELS`) are computed
+              in stream order, expanding as devices are enabled so that
+              EMG, EEG, AUX, and SyncStation ranges are contiguous and
+              consistent with the decoder.
+        """
+
         self.USE_EMG = use_emg
         self.USE_EEG = use_eeg
         self.SAVE_COUNTERS = True

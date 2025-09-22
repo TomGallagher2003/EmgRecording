@@ -10,7 +10,7 @@ from view_csv import plot_file, plot_channel
 matplotlib.use('TkAgg')
 
 
-FILENAME = "data/6/eeg/EA/csv/eeg_data_09-09_2000ms_M2R1.csv"
+FILENAME = "../data/6/eeg/EA/csv/eeg_data_09-09_2000ms_M2R1.csv"
 
 def filter_file(file_path):
     """

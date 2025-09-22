@@ -11,7 +11,7 @@ from util.OTB_refactored.configuration_processing import process_config
 from config import Config
 
 # === User configuration: define your raw buffer file here ===
-BUFFER_FILE = Path("test/buffers", "buffer_both_M3R2.bin")
+BUFFER_FILE = Path("../test/buffers", "buffer_both_M3R2.bin")
 
 config = Config(True, True)
 

@@ -1,4 +1,19 @@
+"""File path constants for movement and rest images used in the exercise app.
+
+This module defines the `Images` class, which stores lists of paths
+to PNG files representing hand/wrist movements for sets A and B,
+as well as the path to the rest image.
+"""
+
 class Images:
+    """Container for static file paths of movement and rest images.
+
+    Attributes:
+        MOVEMENT_IMAGES_A (list[str]): Paths to movement images for exercise set A.
+        MOVEMENT_IMAGES_B (list[str]): Paths to movement images for exercise set B.
+        REST (str): Path to the rest image.
+    """
+
     MOVEMENT_IMAGES_A = [
         "movement_library/EA/Index_flexion_M1.png",
         "movement_library/EA/Index_Extension_M2.png",
