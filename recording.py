@@ -154,7 +154,7 @@ class Session:
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
-        chunk_size = self.tot_num_byte * 8
+        chunk_size = self.tot_num_byte * 10
         start_time = time.time()
         self.recording = True
 
@@ -167,12 +167,6 @@ class Session:
         self.recording = False
         print(f"Elapsed time for receiving data: {time.time() - start_time:.2f} seconds")
         print("Total bytes received:", len(data_buffer))
-        if not self.config.USE_EEG:
-            offset = simple_alignment(data_buffer)
-        else:
-            offset = 0
-        if offset != 0:
-            data_buffer = data_buffer[:-offset]
         sample_size = self.tot_num_byte
         remainder = len(data_buffer) % sample_size
         if remainder != 0:
@@ -307,7 +301,7 @@ class Session:
                """
 
         data_buffer = b""
-        chunk_size = self.tot_num_byte * 8
+        chunk_size = self.tot_num_byte * 10
         start_time = time.time()
         self.recording = True
 
@@ -324,7 +318,7 @@ class Session:
         chan_ready = 0
         data_buffer = b""  # Buffer to store the received data
 
-        chunk_size = self.tot_num_byte * 8
+        chunk_size = self.tot_num_byte * 10
         start_time = time.time()
         self.recording = True
 
