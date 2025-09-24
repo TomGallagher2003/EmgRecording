@@ -30,15 +30,15 @@ from util.data_validation import validate_data
 from util.images import Images
 
 # Window dimensions for both parameter and main screens
-SIZE = 100
+SIZE = 135
 WINDOW_WIDTH = 10 * SIZE
-WINDOW_HEIGHT = 6 * SIZE
+WINDOW_HEIGHT = 5 * SIZE
 
 # Rest image filename
 rest_image = Images.REST
 
 # Fixed initial baseline (before the very first movement) — recorded under movement 1
-INITIAL_BASELINE_SECONDS = 5.0
+INITIAL_BASELINE_SECONDS = 4
 
 
 def _now():
@@ -118,7 +118,7 @@ class ExerciseApp:
         """
         self.root = root
         self.root.title("Exercise Timer")
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+80+40")
         self.root.resizable(False, False)
 
         # Device selections
@@ -383,16 +383,16 @@ class ExerciseApp:
 
         left = tk.Frame(self.root, width=WINDOW_WIDTH // 2, height=WINDOW_HEIGHT)
         left.pack(side='left', fill='both', pady=50, padx=30)
-        right = tk.Frame(self.root, width=WINDOW_WIDTH // 2, height=WINDOW_HEIGHT)
-        right.pack(side='right', fill='both', pady=50)
+        right = tk.Frame(self.root, width=WINDOW_WIDTH // 2, height=WINDOW_HEIGHT + 30)
+        right.pack(side='right', fill='both', pady=20)
         self.left_frame, self.right_frame = left, right
 
         self.next_image_label = tk.Label(left, highlightthickness=0)  # toggled red border in pre-rest
         self.next_image_label.pack(anchor='n', padx=10, pady=10)
         self.variable_label = tk.Label(left, text=self.get_variables_text(), font=("Helvetica", 14))
-        self.variable_label.pack(anchor='w', padx=10, pady=10)
+        self.variable_label.pack(anchor='n', padx=10, pady=10)
         self.runtime_label = tk.Label(left, text="Runtime: 0 s", font=("Helvetica", 16))
-        self.runtime_label.pack(anchor='w', padx=10, pady=10)
+        self.runtime_label.pack(anchor='n', padx=10, pady=10)
 
         self.image_label = tk.Label(right)
         self.image_label.pack(pady=10, padx=WINDOW_WIDTH * 0.1)
@@ -403,19 +403,19 @@ class ExerciseApp:
         self.index_label.pack(pady=10)
 
         # Radial countdown indicator
-        self.canvas = tk.Canvas(self.right_frame, width=50, height=50)
+        self.canvas = tk.Canvas(self.right_frame, width=60, height=80)
         self.canvas.pack(pady=10)
-        self.canvas.create_oval(10, 10, 40, 40, outline='#ddd', width=8)
-        self.arc = self.canvas.create_arc(10, 10, 40, 40, start=90, extent=0,
+        self.canvas.create_oval(12, 12, 50, 50, outline='#ddd', width=8)
+        self.arc = self.canvas.create_arc(12, 12, 50, 50, start=90, extent=0,
                                           style='arc', width=8)
 
-        self.pause_button = tk.Button(right, text="Pause", font=("Helvetica", 16),
+        self.pause_button = tk.Button(left, text="Pause", font=("Helvetica", 16),
                                       fg="black", bg="red", command=self.pause_exercise)
         self.pause_button.pack(pady=10)
 
-        self.resume_button = tk.Button(right, text="Resume", font=("Helvetica", 16),
+        self.resume_button = tk.Button(left, text="Resume", font=("Helvetica", 16),
                                        fg="black", bg="green", command=self.resume_exercise)
-        self.stop_button = tk.Button(right, text="Stop Session", font=("Helvetica", 16),
+        self.stop_button = tk.Button(left, text="Stop Session", font=("Helvetica", 16),
                                      fg="white", bg="black", command=self.stop_session)
 
     def get_variables_text(self):
@@ -427,7 +427,7 @@ class ExerciseApp:
         return (f"Subject ID: {self.subject_id}\n"
                 f"Set: {self.exercise_set}\n"
                 f"Perform Time: {self.perform_time*1000:.0f} ms\n"
-                f"Rest Time (reps & between movements): {self.rest_time*1000:.0f} ms\n"
+                f"Rest Time : {self.rest_time*1000:.0f} ms\n"
                 f"Repeats: {self.num_repeats}")
 
     def show_image(self, path):
@@ -437,8 +437,8 @@ class ExerciseApp:
             path (str): Filesystem path to the image to display.
         """
         img = Image.open(path)
-        max_w = WINDOW_WIDTH * 0.7
-        max_h = WINDOW_HEIGHT // 2.3
+        max_w = WINDOW_WIDTH * 0.7 * 1.3
+        max_h = WINDOW_HEIGHT // 2.3 * 1.3
         img.thumbnail((max_w, max_h), Image.LANCZOS)
         tkimg = ImageTk.PhotoImage(img)
         self.image_label.config(image=tkimg)
@@ -451,8 +451,8 @@ class ExerciseApp:
             path (str): Filesystem path to the image to preview.
         """
         img = Image.open(path)
-        max_w = WINDOW_WIDTH * 0.7 // 2
-        max_h = WINDOW_HEIGHT // 2.3 // 2
+        max_w = WINDOW_WIDTH * 0.7 // 1.5 * 1.2
+        max_h = WINDOW_HEIGHT // 2.3 // 1.5 * 1.2
         img.thumbnail((max_w, max_h), Image.LANCZOS)
         tkimg = ImageTk.PhotoImage(img)
         self.next_image_label.config(image=tkimg)
