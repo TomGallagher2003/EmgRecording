@@ -202,7 +202,7 @@ class Session:
             self.save_channels(data[self.config.MUOVI_PLUS_EEG_CHANNELS], labels, "eeg", perform_time, exercise_group, suffix)
 
         if self.config.SAVE_COUNTERS and self.config.USE_EEG:
-            self.save_channels(np.array([data[self.config.SYNCSTATION_COUNTER_CHANNEL],
+            self.save_channels(np.array([data[self.config.SYNCSTATION_COUNTER_CHANNEL], data[self.config.SYNCSTATION_COUNTER_CHANNEL],
                                          data[self.config.MUOVI_PLUS_COUNTER_CHANNEL]]), labels, "counters", perform_time, exercise_group,
                                suffix)
 
