@@ -223,7 +223,7 @@ class Session:
             time.sleep(0.05)
         while time.time() < end_time:
             if not self.recording:
-                data = self.socket_handler.receive(1024)
+                data = self.socket_handler.receive(self.tot_num_byte * 10)
                 if not data:
                     break
 
