@@ -6,25 +6,27 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="EMG/EEG data collection & docs">
+        <meta name="description" content="Tkinter UI and recording utilities for EMG/EEG exercise sessions">
       
       
       
       
-        <link rel="prev" href="../data_validation/">
+        <link rel="prev" href="../dev/structure/">
       
       
+        <link rel="next" href="constants/">
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.20">
     
     
       
-        <title>Channel Alignment - Prosthetic Hand Control</title>
+        <title>Configuration Overview - EMG/EEG Experiment Program</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.e53b48f4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.e53b48f4.min.css">
       
       
 
@@ -43,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#channel-alignment" class="md-skip">
+        <a href="#configuration-overview" class="md-skip">
           Skip to content
         </a>
       
@@ -78,7 +80,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="Prosthetic Hand Control" class="md-header__button md-logo" aria-label="Prosthetic Hand Control" data-md-component="logo">
+    <a href=".." title="EMG/EEG Experiment Program" class="md-header__button md-logo" aria-label="EMG/EEG Experiment Program" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -92,13 +94,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Prosthetic Hand Control
+            EMG/EEG Experiment Program
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Channel Alignment
+              Configuration Overview
             
           </span>
         </div>
@@ -171,13 +173,51 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
     
   
-  Home
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../dev/structure/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Structure
 
       </a>
     </li>
@@ -194,9 +234,55 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../recording/" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
           
   
+  
+    
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../key-actions/device-check.md" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Key Actions
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/timer/" class="md-tabs__link">
+          
+  
+  
+    
   
   API Reference
 
@@ -226,15 +312,17 @@
   
 
 
-<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="Prosthetic Hand Control" class="md-nav__button md-logo" aria-label="Prosthetic Hand Control" data-md-component="logo">
+    <a href=".." title="EMG/EEG Experiment Program" class="md-nav__button md-logo" aria-label="EMG/EEG Experiment Program" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Prosthetic Hand Control
+    EMG/EEG Experiment Program
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -246,12 +334,56 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Home
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Structure
     
   </span>
   
@@ -270,6 +402,16 @@
   
   
     
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
     
     
     
@@ -284,10 +426,304 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Constants
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Images & Assets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Key Actions
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Key Actions
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-actions/device-check.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Device Check
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-actions/start-session.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Start Session
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-actions/pause-resume.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pause & Resume
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-actions/stop-safely.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Stop Safely
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-actions/recording-lifecycle.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Recording Lifecycle
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -300,8 +736,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
           </label>
@@ -314,12 +750,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../recording/" class="md-nav__link">
+      <a href="../api/timer/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Recording
+    timer
     
   </span>
   
@@ -337,12 +773,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/" class="md-nav__link">
+      <a href="../api/core-phase_manager/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Configuration
+    core.phase_manager
     
   </span>
   
@@ -360,12 +796,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plotting/" class="md-nav__link">
+      <a href="../api/core-recording_helpers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Plotting
+    core.recording_helpers
     
   </span>
   
@@ -380,11 +816,19 @@
                 
   
   
-    
-  
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -392,19 +836,19 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" >
         
           
-          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
-    Utilities
+    core.ui
     
   </span>
   
@@ -412,10 +856,10 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
             <span class="md-nav__icon md-icon"></span>
-            Utilities
+            core.ui
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -426,12 +870,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../processing/" class="md-nav__link">
+      <a href="../api/core-ui-device_screen/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Processing
+    device_screen
     
   </span>
   
@@ -449,12 +893,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../filters/" class="md-nav__link">
+      <a href="../api/core-ui-parameter_screen/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Filters
+    parameter_screen
     
   </span>
   
@@ -472,12 +916,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../socket_handling/" class="md-nav__link">
+      <a href="../api/core-ui-main_screen/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Socket Handling
+    main_screen
     
   </span>
   
@@ -495,129 +939,17 @@
   
   
     <li class="md-nav__item">
-      <a href="../file_pathing/" class="md-nav__link">
+      <a href="../api/core-ui-image_loader/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    File Pathing
+    image_loader
     
   </span>
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../data_validation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Data Validation
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Channel Alignment
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    Channel Alignment
-    
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#util.channel_alignment" class="md-nav__link">
-    <span class="md-ellipsis">
-      channel_alignment
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="channel_alignment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#util.channel_alignment.simple_alignment" class="md-nav__link">
-    <span class="md-ellipsis">
-      simple_alignment
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -626,6 +958,75 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/util-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    util.images
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/util-data_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    util.data_validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/empty_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    empty_recording
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -645,56 +1046,6 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#util.channel_alignment" class="md-nav__link">
-    <span class="md-ellipsis">
-      channel_alignment
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="channel_alignment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#util.channel_alignment.simple_alignment" class="md-nav__link">
-    <span class="md-ellipsis">
-      simple_alignment
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           
             <div class="md-content" data-md-component="content">
@@ -704,138 +1055,15 @@
 
 
 
-<h1 id="channel-alignment">Channel Alignment</h1>
-
-
-<div class="doc doc-object doc-module">
-
-
-
-<h2 id="util.channel_alignment" class="doc doc-heading">
-            <code>util.channel_alignment</code>
-
-
-</h2>
-
-    <div class="doc doc-contents first">
-
-        <p>Channel alignment utility for EMG-only frames.</p>
-<p>Provides a heuristic to locate the sample-counter channel in recent frames
-and compute the byte offset needed to align frame boundaries in a raw byte
-buffer from the Muovi/SyncStation stream.</p>
-
-
-
-
-
-
-
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="util.channel_alignment.simple_alignment" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">simple_alignment</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Estimate frame alignment offset from the tail of a byte buffer.</p>
-<p>Takes the last 10 frames (assumed 88 bytes per frame for EMG-only) and
-decodes EMG + auxiliary channels to locate a monotonically increasing
-sample-counter channel. Returns the number of bytes to trim from the end
-so that the buffer ends at a frame boundary.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>data_buffer</code>
-            </td>
-            <td>
-                  <code><span title="bytes">bytes</span> | <span title="bytearray">bytearray</span> | <span title="memoryview">memoryview</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Raw incoming byte buffer.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>int</code></td>            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Byte offset to drop from the end of <code>data_buffer</code> (0 if not found).</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<details class="notes" open>
-  <summary>Notes</summary>
-  <ul>
-<li>Assumes 16-bit EMG samples (2 bytes) and 6 auxiliary channels at the
-  end of each 88-byte frame.</li>
-<li>Detects a counter by checking consecutive +1 increments across the
-  first three samples; uses a second channel (+6) to disambiguate.</li>
+<h1 id="configuration-overview">Configuration Overview<a class="headerlink" href="#configuration-overview" title="Permanent link">&para;</a></h1>
+<p>Configuration is intentionally minimal (no external config files). The following are considered "configurable" inputs:</p>
+<ul>
+<li><strong>Window geometry constants</strong> (see <em>Constants</em>)</li>
+<li><strong>Experiment timings</strong> (entered by the user at runtime)</li>
+<li><strong>Image paths</strong> (see <em>Images &amp; Assets</em>)</li>
+<li><strong>Hardware selection</strong> (EMG/EEG) at runtime</li>
 </ul>
-</details>
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
+<p>If you later add a proper config file (e.g., YAML), you can document the keys here and keep legacy defaults for compatibility.</p>
 
 
 
@@ -855,12 +1083,6 @@ so that the buffer ends at a frame boundary.</p>
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
-</button>
         
       </main>
       
@@ -890,10 +1112,10 @@ so that the buffer ends at a frame boundary.</p>
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.top", "toc.follow", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.indexes", "content.code.copy", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
     
   </body>
