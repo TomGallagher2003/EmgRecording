@@ -25,7 +25,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import threading
-from recording import Session
+from empty_recording import Session
 from util.data_validation import validate_data
 from util.images import Images
 

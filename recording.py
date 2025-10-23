@@ -42,14 +42,14 @@ class Session:
             dateString (str): Short date string (dd-mm) used in file naming.
             ind (int): Internal counter for segments recorded in this process.
         """
-    def __init__(self, use_emg, use_eeg):
+    def __init__(self, use_emg, use_eeg, data_path, label_path):
         """Initialize a recording session and connect to the device.
 
                 Args:
                     use_emg (bool): Whether EMG channels are enabled.
                     use_eeg (bool): Whether EEG channels are enabled.
                 """
-        self.config = Config(use_emg, use_eeg)
+        self.config = Config(use_emg, use_eeg, data_path, label_path)
         self.socket_handler = SocketHandler(self.config.IP_ADDRESS, self.config.TCP_PORT)
         self.socket_handler.connect()
         self.conf_string = None
