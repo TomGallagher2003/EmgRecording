@@ -37,7 +37,7 @@ class SegmentationParams:
 
     # Thresholding
     threshold_mode: str = "percentile"   # "percentile" | "zscore"
-    percentile: float = 50.0
+    percentile: float = 60.0
     z_thresh: float = 2.5
 
     # Post-processing

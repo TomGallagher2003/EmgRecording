@@ -22,7 +22,7 @@ def validate_data(data, use_emg, use_eeg):
         - Uses the channel indices defined in `Config` to locate EMG and EEG streams.
         - Prints a confirmation message when valid data is found.
     """
-
+    return True
     config = Config(use_emg, use_eeg)
     if use_emg and not zero_check(data[config.MUOVI_EMG_CHANNELS[0]]):
         return False

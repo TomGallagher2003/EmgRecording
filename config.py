@@ -122,7 +122,7 @@ class Config:
 
         self.SYNCSTATION_CHANNELS = list(range(num_channels_used, num_channels_used + 6))
 
-        self.SYNCSTATION_COUNTER_CHANNEL = self.SYNCSTATION_CHANNELS[4]
-        self.MUOVI_COUNTER_CHANNEL = self.MUOVI_AUX_CHANNELS[4]
+        self.SYNCSTATION_COUNTER_CHANNEL = self.SYNCSTATION_CHANNELS[5]
+        self.MUOVI_COUNTER_CHANNEL = self.MUOVI_AUX_CHANNELS[5]
         self.MUOVI_PLUS_COUNTER_CHANNEL = self.MUOVI_PLUS_AUX_CHANNELS[5]
 

@@ -91,43 +91,88 @@ def mask_to_segments(mask: np.ndarray) -> list[tuple[int, int]]:
 
 
 def plot_emg_with_labels(fname: str, X: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray, fs: float, out_dir: str):
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+
     os.makedirs(out_dir, exist_ok=True)
+
+    plt.rcParams.update({
+        "font.size": 12,
+        "axes.facecolor": "white",
+        "figure.facecolor": "none",
+        "axes.edgecolor": "none",
+        "axes.labelcolor": "#0f172a",
+        "xtick.color": "#0f172a",
+        "ytick.color": "#0f172a",
+        "axes.grid": False,
+        "grid.color": (0, 0, 0, 0.08),
+        "grid.linewidth": 1.0,
+        "legend.frameon": False
+    })
+
+    # --- Use channel 12 (index 11) raw signal ---
     N = X.shape[1]
     t = np.arange(N) / fs
-    agg = np.mean(np.abs(X), axis=0)
-    if np.max(agg) > 0:
-        agg = agg / np.max(agg)
+    ch_idx = 11  # channel 12 (0-indexed)
+    emg_ch = X[ch_idx, :]
 
     true_segs = mask_to_segments(y_true)
     pred_segs = mask_to_segments(y_pred)
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(t, agg, label='|EMG| (mean across channels)')
+    fig, ax = plt.subplots(figsize=(12, 4.2))
+    # Slide-matching palette (based on your showcase gradient)
+    emg_col = "#ffffff"  # Cyan-blue (matches F1 bars)
+    true_fill = "#0377fc"  # Soft mint green (matches Recall)
+    pred_fill = "#fcfc03"  # Lavender-blue (complements background)
+    pred_edge = "#ff0000"  # Deep indigo edge for contrast
+    true_edge = "#000000"
 
-    # Shade predicted regions
+    ax.plot(t, emg_ch, color=emg_col, linewidth=1.5, label=f"EMG channel {ch_idx+1}")
+
+    # Compute vertical range dynamically for shading
+    y_min, y_max = np.min(emg_ch), np.max(emg_ch)
+    y_pad = 0.05 * (y_max - y_min)
+    y_min -= y_pad
+    y_max += y_pad
+
+    # Shade true label regions
+    for s, e in true_segs:
+        x0, x1 = t[s], t[e - 1] if e > 0 else t[e]
+        rect = Rectangle((x0, y_min), x1 - x0, y_max - y_min,
+                         facecolor=true_fill, alpha=0.4,
+                         edgecolor="none", linewidth=2)
+        ax.add_patch(rect)
+
+    # Shade predicted regions with faint edge
     for s, e in pred_segs:
-        ax.axvspan(t[s], t[e-1] if e>0 else t[e], alpha=0.15, color='tab:blue', label='_pred_span')
+        x0, x1 = t[s], t[e-1] if e > 0 else t[e]
+        rect = Rectangle((x0, y_min), x1 - x0, y_max - y_min,
+                         facecolor=pred_fill, alpha=0.4,
+                         edgecolor="none", linewidth=2)
+        ax.add_patch(rect)
 
-    # Label starts/ends
-    for idx, (s, e) in enumerate(true_segs):
-        ax.axvline(t[s], color='green', linestyle='-', linewidth=1.2, label='label start' if idx == 0 else None)
-        ax.axvline(t[e-1] if e>0 else t[e], color='red', linestyle='-', linewidth=1.2, label='label end' if idx == 0 else None)
+    ax.set_xlabel("Time (s)", fontsize=20)
+    ax.set_ylabel("Amplitude (raw)", fontsize=20)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.margins(x=0.01)
 
-    # Pred starts/ends
-    for idx, (s, e) in enumerate(pred_segs):
-        ax.axvline(t[s], color='tab:blue', linestyle='--', linewidth=1.0, label='pred start' if idx == 0 else None)
-        ax.axvline(t[e-1] if e>0 else t[e], color='tab:orange', linestyle='--', linewidth=1.0, label='pred end' if idx == 0 else None)
+    handles = [
+        Rectangle((0, 0), 1, 1, facecolor=true_fill, alpha=0.4, edgecolor="none", label="Prompt label"),
+        Rectangle((0, 0), 1, 1, facecolor=pred_fill, alpha=0.4, edgecolor="none", linewidth=1.2, label="Auto segmentation"),
+    ]
+    ax.legend(handles=handles, loc="upper right", ncol=3, fontsize=14)
 
-    ax.set_title(fname)
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Normalized amplitude')
-    ax.legend(loc='upper right', ncol=4, fontsize=8)
-    ax.grid(True, alpha=0.3)
-
-    out_path = os.path.join(out_dir, os.path.splitext(fname)[0] + ".png")
     fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
+    out_path = os.path.join(out_dir, os.path.splitext(fname)[0] + ".png")
+    fig.savefig(out_path, dpi=300, transparent=True)
     plt.close(fig)
+
+
 
 def estimate_lag_ms(y_true: np.ndarray, y_pred: np.ndarray, fs: float, max_lag_ms: int = 500) -> tuple[int, float]:
     """Lag of pred relative to label via bounded cross-corr. +ve => pred late."""
@@ -296,7 +341,6 @@ def main(data_dir, plots_dir, csv_dir, outfile):
 if __name__ == "__main__":
     times = {"300ms" : "EA", "1000ms" : "EB", "3000ms" : "EA"}
     subjects = ["A", "B", "C"]
-
     for subject in subjects:
         for time, set in times.items():
-            main(f"test_recordings/subject_{subject}/{time}_trial/emg/{set}/csv", f"movement_period_eval/plots/subject_{subject}", f"movement_period_eval/tables", f"subject_{subject}_{time}")
+            main(f"test_recordings/subject_{subject}/{time}_trial/emg/{set}/csv", f"movement_period_eval/plots/showcase", f"movement_period_eval/tables", f"subject_{subject}_{time}")

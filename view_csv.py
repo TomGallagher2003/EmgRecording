@@ -15,19 +15,20 @@ from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = ""                           # Set your file name here
+FILENAME = r"C:\Users\tom03\PycharmProjects\EmgRecording\test\test_recordings\counter_recordings\4\emg\EA\csv\emg_data_06-10_2000ms_M1R2.csv"
 SINGLE_CHANNEL_MODE = False
-CHANNEL = 12
+CHANNEL = 3
 
 START_CHANNEL = 10
 NUM_CHANNELS = 5
 
-CHANNEL_LIST = []
+CHANNEL_LIST = [3,1, 2]
 
 
 
 
-AMPLITUDE_IN_MILLIVOLTS = 1               # Only affects multi-channel mode. Adjust as necessary
+AMPLITUDE_IN_MILLIVOLTS = 1             # Only affects multi-channel mode. Adjust as necessary
+SHIFT = 0000
 
 
 MICRO_VOLTS = False
@@ -74,7 +75,7 @@ Notes:
     X = 0
 
     for j, emg_signal in enumerate(data):
-        axes[j].set_ylim(-1 * amplitude, amplitude)
+        axes[j].set_ylim(-1 * amplitude + SHIFT, amplitude + SHIFT)
         axes[j].set_yticks([])
         axes[j].set_xticks([])
         axes[j].plot(emg_signal, label=f'Channel {j + 1}')
@@ -104,11 +105,6 @@ Notes:
     data = np.loadtxt(file_path, delimiter=',')
     data = data.transpose()
     unit_label = "mV"
-    if max([max(x) for x in data[5:20]]) > 500:
-        unit_label = "raw input"
-    elif MICRO_VOLTS:
-        data = data * 1e3
-        unit_label = "µV"
     
     
 
