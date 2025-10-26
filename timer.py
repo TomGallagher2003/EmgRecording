@@ -11,7 +11,7 @@ This module defines a Tkinter-based application (`ExerciseApp`) that:
 import time
 import tkinter as tk
 import threading
-from recording import Session
+from empty_recording import Session
 from util.data_validation import validate_data
 from util.images import Images
 from core.ui.device_screen import build_device_screen
@@ -20,7 +20,7 @@ from core.ui.main_screen import build_main_ui
 from core.ui.image_loader import load_scaled_tk
 
 from core.recording_helpers import RecordingController
-from experiment_settings import (DATA_DESTINATION_PATH, LABEL_DESTINATION_PATH, IMAGE_SOURCE_PATH,
+from experiment_settings import (DATA_DESTINATION_PATH, IMAGE_SOURCE_PATH,
                                  INITIAL_BASELINE_SECONDS, WINDOW_WIDTH, WINDOW_HEIGHT, ARC_TICK_MS)
 rest_image = Images.REST
 
@@ -87,7 +87,7 @@ class ExerciseApp:
 
         try:
             # Create recording session now
-            self.recorder = Session(self.use_emg, self.use_eeg, DATA_DESTINATION_PATH, LABEL_DESTINATION_PATH)
+            self.recorder = Session(self.use_emg, self.use_eeg, DATA_DESTINATION_PATH)
             self.rec = RecordingController(self.recorder)  # <-- wire controller
 
             # Do quick data check before proceeding

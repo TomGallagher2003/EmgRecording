@@ -1,7 +1,5 @@
 site_name: EMG/EEG Experiment Program
 site_description: Tkinter UI and recording utilities for EMG/EEG exercise sessions
-# repo_url: https://github.com/yourname/yourrepo
-# repo_name: yourrepo
 
 theme:
   name: material
@@ -11,36 +9,15 @@ theme:
     - content.code.copy
     - toc.integrate
 
-nav:
-  - Overview: index.md
-  - Getting Started: getting-started.md
-  - Structure: dev/structure.md
-  - Configuration:
-      - Configuration Overview: config/index.md
-      - Constants: config/constants.md
-      - Images & Assets: config/images.md
-  - Key Actions:
-      - Device Check: key-actions/device-check.md
-      - Start Session: key-actions/start-session.md
-      - Pause & Resume: key-actions/pause-resume.md
-      - Stop Safely: key-actions/stop-safely.md
-      - Recording Lifecycle: key-actions/recording-lifecycle.md
-  - API Reference:
-      - timer: api/timer.md
-      - core.phase_manager: api/core-phase_manager.md
-      - core.recording_helpers: api/core-recording_helpers.md
-      - core.ui:
-          - device_screen: api/core-ui-device_screen.md
-          - parameter_screen: api/core-ui-parameter_screen.md
-          - main_screen: api/core-ui-main_screen.md
-          - image_loader: api/core-ui-image_loader.md
-      - util.images: api/util-images.md
-      - util.data_validation: api/util-data_validation.md
-      - empty_recording: api/empty_recording.md
 
 plugins:
   - search
   - autorefs
+  - gen-files:
+      scripts:
+        - docs/_scripts/gen_api.py
+  - literate-nav:
+      nav_file: api/SUMMARY.nav
   - mkdocstrings:
       handlers:
         python:
@@ -51,6 +28,27 @@ plugins:
             separate_signature: true
             show_if_no_docstring: true
             members_order: source
+
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Structure: dev/structure.md
+  - Configuration:
+      - Configuration Overview: config/index.md
+      - Constants: config/constants.md
+      - Images & Assets: config/images.md
+  - Quick Change Guides:
+      - Update Experiment UI : quick-change-guides/ui_changes.md
+      - Update Processing : quick-change-guides/processing_changes.md
+      - Change Probe Modes : quick-change-guides/gain_and_scale_modes.d
+      - Swap Movement Sets & Image Library : quick-change-guides/movement_sets_and_images.md
+      - Plotting Guide : quick-change-guides/plotting_quick_tweaks.md
+  - API Reference: api/SUMMARY.nav
+  - Contact: contact.md
+
+
+
+
 
 markdown_extensions:
   - admonition

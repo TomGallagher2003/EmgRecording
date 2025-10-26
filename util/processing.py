@@ -50,6 +50,9 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 ind = np.where(data_sub_matrix >= 32768)
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
 
+                # Apply defined process (default nothing)
+                data_sub_matrix = emg_process(data_sub_matrix)
+
                 # converting raw volts to mV using the ratios from the documentation
                 data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EMG_MODE] * 1e3
 
@@ -71,8 +74,8 @@ def process(config, temp, data, tot_num_byte, chan_ready):
                 ind = np.where(data_sub_matrix >= 8388608)
                 data_sub_matrix[ind] = data_sub_matrix[ind] - 16777216
 
-                #Apply the filtering pipeline (Bandpass 0.3Hz-70Hz and Bandstop to remove line noise at 50Hz)
-                data_sub_matrix = preprocess_eeg(data_sub_matrix)
+                # Apply defined process (default nothing)
+                data_sub_matrix = eeg_process(data_sub_matrix)
 
                 # converting raw volts to mV using the ratios from the documentation
                 data_sub_matrix = data_sub_matrix * config.GAIN_RATIOS[config.EEG_MODE] * 1e3
@@ -89,10 +92,39 @@ def process(config, temp, data, tot_num_byte, chan_ready):
     aux_starting_byte = tot_num_byte - (6 * 2)
     ch_ind = np.arange(aux_starting_byte, aux_starting_byte + 12, 2)
     data_sub_matrix = temp[ch_ind].astype(np.int32) * 256 + temp[ch_ind + 1].astype(np.int32)
-    # Search for the negative values and make the two's complement
-    # ind = np.where(data_sub_matrix >= 32768)
-    # data_sub_matrix[ind] = data_sub_matrix[ind] - 65536
     data[chan_ready:chan_ready + 6, :] = data_sub_matrix
     del data_sub_matrix
 
+    return data
+
+
+def emg_process(data):
+    """Configure-time EMG post-processing hook (passthrough by default).
+
+    This function is intentionally minimal, so you can inject
+    per-project processing steps (e.g., filtering)
+    without touching the recording pipeline. It should be **pure** and
+    **fast**, returning a processed object of the same shape/type as ``data``.
+
+    Args:
+        data: Raw EMG samples
+    Returns:
+        The processed EMG samples, same shape/type as ``data``.
+    """
+    return data
+
+
+def eeg_process(data):
+    """Configure-time EEG post-processing hook (passthrough by default).
+
+    Like :func:`emg_process`, this is a safe place to add processes as needed.
+    Keep the function pure (no side effects) and fast.
+
+    Args:
+        data: Raw EEG samples
+
+    Returns:
+        The processed EEG samples, same shape/type as ``data``.
+
+    """
     return data

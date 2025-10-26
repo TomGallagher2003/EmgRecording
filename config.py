@@ -52,7 +52,7 @@ class Config:
     """
 
 
-    def __init__(self, use_emg, use_eeg, data_path, label_path):
+    def __init__(self, use_emg, use_eeg, data_path):
         """Initialize configuration with chosen devices and derive channel maps.
 
         Args:
@@ -71,7 +71,7 @@ class Config:
 
         self.USE_EMG = use_emg
         self.USE_EEG = use_eeg
-        self.SAVE_COUNTERS = True
+        self.SAVE_COUNTERS = False
         self.SAVE_H5 = True
 
         # Set the Gain Mode here : 0 -> 8, 1 -> 4
@@ -105,8 +105,6 @@ class Config:
         self.NUM_CHAN = [38, 38, 38, 38, 70, 70, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
         self.SAMPLE_FREQUENCY = 2000
         self.DATA_DESTINATION_PATH = data_path
-        self.LABEL_DESTINATION_PATH = label_path
-
 
         num_channels_used = 0
         self.MUOVI_EMG_CHANNELS = list(range(0, 32))

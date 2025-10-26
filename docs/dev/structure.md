@@ -26,4 +26,6 @@ Contains the movement images used for the experiment
 ## Dependencies - requirements.txt
 If any new dependencies are added, they should be defined here to ensure future dependency installations are complete
 
+## Docs 
 
+The docs package contains the markdown for the pages on this site. mkdocs.yml and requirements-docs.txt define the dependencies and behaviour of the docs, but they should not need to be changed
