@@ -805,6 +805,48 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="device_screen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core.ui.device_screen--overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core.ui.device_screen--integration-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration contract
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core.ui.device_screen--example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core.ui.device_screen--notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1560,6 +1602,68 @@
 <a id="core.ui.device_screen"></a>
     <div class="doc doc-contents first">
 
+        <p>Device selection screen (Tkinter) for EMG/EEG recording UI.</p>
+<p>This module provides a single helper, <code>build_device_screen</code>, which constructs
+the <strong>device selection page</strong> of the Tkinter app. It is designed to be
+discovered by <strong>mkdocstrings</strong> for inclusion in your MkDocs site.</p>
+<h3 id="core.ui.device_screen--overview">Overview<a class="headerlink" href="#core.ui.device_screen--overview" title="Permanent link">&para;</a></h3>
+<p>The screen lets a user select which devices are connected (EMG, EEG), validates
+that at least one device is chosen, and exposes a <strong>Continue</strong> button that hands
+control back to the host application.</p>
+<p>UI layout (grid):
+- Row 1: Title "Select Connected Devices"
+- Row 2: Two checkboxes: <strong>EMG</strong> (left), <strong>EEG</strong> (right)
+- Row 3: Inline validation/error label (red)
+- Row 4: <strong>Continue</strong> button (disabled until a device is checked)</p>
+<h3 id="core.ui.device_screen--integration-contract">Integration contract<a class="headerlink" href="#core.ui.device_screen--integration-contract" title="Permanent link">&para;</a></h3>
+<p><code>build_device_screen(app, ...)</code> attaches several variables and widgets to the
+<code>app</code> object and wires two callbacks that are expected to be implemented on
+<code>app</code>:</p>
+<p>Required callbacks on <code>app</code>:
+- <code>_validate_device_selection() -&gt; None</code>
+    Called whenever either checkbox is toggled. Should enable the Continue
+    button and clear the error when at least one device is selected; otherwise
+    disable the button and show an error.
+- <code>_confirm_devices() -&gt; None</code>
+    Called when the <strong>Continue</strong> button is pressed. Typically persists the
+    selections and advances to the parameter screen.</p>
+<p>Attributes added to <code>app</code>:
+- <code>device_frame (tk.Frame)</code>: The root frame for this screen.
+- <code>emg_var (tk.BooleanVar)</code>: Backing var for the EMG checkbox.
+- <code>eeg_var (tk.BooleanVar)</code>: Backing var for the EEG checkbox.
+- <code>device_error (tk.Label)</code>: Inline error/validation message (red).
+- <code>device_continue_btn (tk.Button)</code>: Disabled until selection is valid.</p>
+<h3 id="core.ui.device_screen--example">Example<a class="headerlink" href="#core.ui.device_screen--example" title="Permanent link">&para;</a></h3>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>import tkinter as tk
+from ui.device_screen import build_device_screen</p>
+<p>class MyApp:
+...     def <strong>init</strong>(self):
+...         self.root = tk.Tk()
+...         build_device_screen(self, 1200, 600)
+...
+...     def _validate_device_selection(self):
+...         enabled = self.emg_var.get() or self.eeg_var.get()
+...         self.device_continue_btn.config(state='normal' if enabled else 'disabled')
+...         self.device_error.config(text="" if enabled else "Please select at least one device (EEG and/or EMG).")
+...
+...     def _confirm_devices(self):
+...         # Handle selections and navigate to the next screen
+...         pass</p>
+<p>app = MyApp()
+app.root.mainloop()</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h3 id="core.ui.device_screen--notes">Notes<a class="headerlink" href="#core.ui.device_screen--notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>This module does not perform any device I/O; it is purely a UI builder.</li>
+<li>The host application owns navigation and lifecycle (e.g., destroying this
+  frame when moving to the next screen).</li>
+</ul>
+
 
 
 
@@ -1594,47 +1698,180 @@
     <div class="doc doc-contents ">
 
         <p>Build and render the device selection screen on the given app.</p>
+<p>This constructs a centered two-column grid with EMG/EEG checkboxes, an
+inline validation label, and a disabled <strong>Continue</strong> button that becomes
+enabled when at least one device is selected. All widgets/variables needed
+later by the app are attached to <code>app</code> for convenient access.</p>
 
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>app</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Host object that must expose a <code>root</code> attribute (<code>tk.Tk</code> or
+<code>tk.Frame</code>) and implement the callbacks:
+- <code>_validate_device_selection()</code>: invoked on checkbox toggle
+- <code>_confirm_devices()</code>: invoked by the Continue button</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>window_width</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Logical width allocation for the frame.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>window_height</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Logical height allocation for the frame.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="side-effects" open>
+  <summary>Side Effects</summary>
+  <ul>
+<li>Assigns <code>app.device_frame</code>, <code>app.emg_var</code>, <code>app.eeg_var</code>,
+  <code>app.device_error</code>, and <code>app.device_continue_btn</code>.</li>
+<li>Registers event handlers to <code>app._validate_device_selection</code> and
+  <code>app._confirm_devices</code>.</li>
+</ul>
+</details>
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p>The module docstring for an integration example and the list of
+attributes created on <code>app</code>.</p>
+</details>
 
             <details class="quote">
               <summary>Source code in <code>core\ui\device_screen.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_device_screen</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">window_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">window_height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build and render the device selection screen on the given app.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_device_screen</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">window_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">window_height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build and render the device selection screen on the given app.</span>
+
+<span class="sd">    This constructs a centered two-column grid with EMG/EEG checkboxes, an</span>
+<span class="sd">    inline validation label, and a disabled **Continue** button that becomes</span>
+<span class="sd">    enabled when at least one device is selected. All widgets/variables needed</span>
+<span class="sd">    later by the app are attached to `app` for convenient access.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        app: Host object that must expose a `root` attribute (``tk.Tk`` or</span>
+<span class="sd">            ``tk.Frame``) and implement the callbacks:</span>
+<span class="sd">            - ``_validate_device_selection()``: invoked on checkbox toggle</span>
+<span class="sd">            - ``_confirm_devices()``: invoked by the Continue button</span>
+<span class="sd">        window_width (int): Logical width allocation for the frame.</span>
+<span class="sd">        window_height (int): Logical height allocation for the frame.</span>
+
+<span class="sd">    Side Effects:</span>
+<span class="sd">        - Assigns ``app.device_frame``, ``app.emg_var``, ``app.eeg_var``,</span>
+<span class="sd">          ``app.device_error``, and ``app.device_continue_btn``.</span>
+<span class="sd">        - Registers event handlers to ``app._validate_device_selection`` and</span>
+<span class="sd">          ``app._confirm_devices``.</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        The module docstring for an integration example and the list of</span>
+<span class="sd">        attributes created on ``app``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">frame</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">window_width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">window_height</span><span class="p">)</span>
     <span class="n">frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">device_frame</span> <span class="o">=</span> <span class="n">frame</span>

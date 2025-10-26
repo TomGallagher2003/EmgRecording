@@ -632,6 +632,90 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="view_csv">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--unit-heuristic-filename-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ Unit heuristic &amp; filename note
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--matplotlib-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Matplotlib backend
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--globals-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Globals / Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Assumptions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view_csv--force-eeg-scaling-regardless-of-filename" class="md-nav__link">
+    <span class="md-ellipsis">
+      Force EEG scaling regardless of FILENAME
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Force EEG scaling regardless of FILENAME">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view_csv--notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -713,6 +797,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="plot_file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view_csv.plot_file--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv.plot_file--notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -721,6 +829,30 @@
       plot_channel
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="plot_channel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view_csv.plot_channel--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view_csv.plot_channel--notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1637,11 +1769,70 @@
 <a id="view_csv"></a>
     <div class="doc doc-contents first">
 
-        <p>Simple plotting utilities for EMG/EEG CSV files.</p>
-<p>Provides helpers to visualize one or more channels from a comma-separated
-signal file. If the filename begins with 'eeg', values are treated as microvolts
-(µV) and scaled accordingly. Multi-channel plots normalize Y-limits using the
-<code>AMPLITUDE_IN_MILLIVOLTS</code> setting (mV by default).</p>
+        <p>Plotting utilities for EMG/EEG CSV files.</p>
+<p>This module provides two helpers—:func:<code>plot_file</code> and :func:<code>plot_channel</code>—to
+visualize signals stored in <strong>comma-separated</strong> text files. It is intended to be
+indexed by <strong>mkdocstrings</strong> for inclusion in your MkDocs site.</p>
+<h3 id="view_csv--overview">Overview<a class="headerlink" href="#view_csv--overview" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Multi-channel view</strong>: stacked subplots with shared X; Y-limits normalized by
+  <code>AMPLITUDE_IN_MILLIVOLTS</code> (interpreted as mV or µV depending on mode).</li>
+<li><strong>Single-channel view</strong>: plots one channel, with a simple unit label heuristic.</li>
+<li><strong>Unit scaling</strong>: a module flag <code>MICRO_VOLTS</code> controls mV→µV scaling.</li>
+</ul>
+<h3 id="view_csv--unit-heuristic-filename-note">⚠️ Unit heuristic &amp; filename note<a class="headerlink" href="#view_csv--unit-heuristic-filename-note" title="Permanent link">&para;</a></h3>
+<p><code>MICRO_VOLTS</code> is determined <strong>at import time</strong> from the module-level
+<code>FILENAME</code> (True if its basename starts with <code>"eeg"</code>). If you call
+:func:<code>plot_file</code> or :func:<code>plot_channel</code> with a <em>different</em> path than
+<code>FILENAME</code>, the heuristic will not update automatically.</p>
+<ul>
+<li>To force EEG scaling independently of <code>FILENAME</code>, set:
+  <code>MICRO_VOLTS = True</code> (or <code>False</code>) <strong>before</strong> calling the plotting
+  functions.</li>
+<li>Alternatively, set <code>FILENAME = "&lt;your path&gt;"</code> before import-time evaluation
+  (or re-run the module) so the heuristic matches your file.</li>
+</ul>
+<h3 id="view_csv--matplotlib-backend">Matplotlib backend<a class="headerlink" href="#view_csv--matplotlib-backend" title="Permanent link">&para;</a></h3>
+<p>This module requests the Tk backend via <code>matplotlib.use("TkAgg")</code>. If you need
+a different backend (e.g., when running headless), you should set it <strong>before
+importing</strong> <code>matplotlib.pyplot</code> in your entry point. If you see a backend
+warning, move the <code>use(...)</code> call earlier in your startup code.</p>
+<h3 id="view_csv--globals-parameters">Globals / Parameters<a class="headerlink" href="#view_csv--globals-parameters" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>FILENAME</code>: Path used by the <code>__main__</code> block and for the EEG/mV→µV
+  heuristic described above.</li>
+<li><code>SINGLE_CHANNEL_MODE</code> / <code>CHANNEL</code>: Toggles and selects the 1-based channel
+  for :func:<code>plot_channel</code> in the <code>__main__</code> block.</li>
+<li><code>START_CHANNEL</code> / <code>NUM_CHANNELS</code> / <code>CHANNEL_LIST</code>: Control which
+  channels are shown in multi-channel mode. <code>CHANNEL_LIST</code> expects <strong>0-based
+  indices</strong>.</li>
+<li><code>AMPLITUDE_IN_MILLIVOLTS</code>: Amplitude clamp for multi-channel plots (interpreted
+  as <strong>mV</strong> unless <code>MICRO_VOLTS=True</code>, in which case it is treated as <strong>µV</strong>).</li>
+</ul>
+<h3 id="view_csv--assumptions">Assumptions<a class="headerlink" href="#view_csv--assumptions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CSV contains <strong>numeric samples only</strong> (no header). Adjust <code>np.loadtxt</code> kwargs
+  (e.g., <code>skiprows</code>) if your files include headers.</li>
+<li>Signals are arranged such that after <code>transpose()</code>, data is
+  <code>(channels, samples)</code>. This works whether channels are rows or columns.</li>
+</ul>
+<h3 id="view_csv--example">Example<a class="headerlink" href="#view_csv--example" title="Permanent link">&para;</a></h3>
+<blockquote>
+<blockquote>
+<blockquote>
+<h2 id="view_csv--force-eeg-scaling-regardless-of-filename">Force EEG scaling regardless of FILENAME<a class="headerlink" href="#view_csv--force-eeg-scaling-regardless-of-filename" title="Permanent link">&para;</a></h2>
+<p>MICRO_VOLTS = True
+plot_file("eeg_data.csv", channel_list=[0, 1, 2, 3])  # channels 1–4
+plot_channel("emg_data.csv", channel=12)              # 1-based index</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h3 id="view_csv--notes">Notes<a class="headerlink" href="#view_csv--notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>config.Config</code> is imported for potential future use but not currently used.</li>
+<li>For large CSVs, <code>np.loadtxt</code> can be slow; consider chunked reads or binary
+  formats if performance becomes an issue.</li>
+</ul>
 
 
 
@@ -1853,262 +2044,29 @@ signal file. If the filename begins with 'eeg', values are treated as microvolts
     <div class="doc doc-contents ">
 
         <p>Plot multiple channels from a CSV signal file in stacked subplots.</p>
-<p>Loads the CSV at <code>file_path</code>, transposes to (channels, samples), optionally
-selects a subset of channels, applies EEG microvolt scaling if the filename
-starts with 'eeg', and renders each channel on its own axis with shared X.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file_path</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span> | <span title="Path">Path</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Path to the CSV file (channels in columns or rows;
-function transposes to channel-major).</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>channel_list</code>
-            </td>
-            <td>
-                  <code><span title="Iterable">Iterable</span>[<span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based indices of channels to
-include. If empty, all channels are plotted.</p>
-              </div>
-            </td>
-            <td>
-                  <code>[]</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<details class="notes" open>
-  <summary>Notes</summary>
-  <ul>
-<li>When <code>MICRO_VOLTS</code> is True (filename starts with 'eeg'), data is multiplied
-  by 1e3 to convert mV→µV for display.</li>
-<li>The Y-range of each subplot is clamped to ±<code>AMPLITUDE_IN_MILLIVOLTS</code>
-  (interpreted as mV or µV depending on mode).</li>
+<p>Loads the CSV at <code>file_path</code>, transposes to <code>(channels, samples)</code>,
+optionally selects a subset of channels, applies EEG µV scaling <strong>depending
+on the module-level <code>MICRO_VOLTS</code> flag</strong>, and renders each channel on its
+own axis with a shared X-axis.</p>
+<h4 id="view_csv.plot_file--parameters">Parameters<a class="headerlink" href="#view_csv.plot_file--parameters" title="Permanent link">&para;</a></h4>
+<p>file_path : str or pathlib.Path
+    Path to the CSV file (channels in columns or rows; function transposes
+    to channel-major).
+channel_list : Iterable[int], optional
+    <strong>0-based</strong> indices of channels to include. If empty, all channels are
+    plotted.</p>
+<h4 id="view_csv.plot_file--notes">Notes<a class="headerlink" href="#view_csv.plot_file--notes" title="Permanent link">&para;</a></h4>
+<ul>
+<li>When <code>MICRO_VOLTS</code> is True, data is multiplied by <code>1e3</code> to convert
+  mV→µV for display.</li>
+<li>The Y-range of each subplot is clamped to
+  <code>±AMPLITUDE_IN_MILLIVOLTS</code> (interpreted as mV or µV depending on mode).</li>
 </ul>
-</details>
+
 
             <details class="quote">
               <summary>Source code in <code>view_csv.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel_list</span><span class="o">=</span><span class="p">[]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot multiple channels from a CSV signal file in stacked subplots.</span>
-
-<span class="sd">Loads the CSV at `file_path`, transposes to (channels, samples), optionally</span>
-<span class="sd">selects a subset of channels, applies EEG microvolt scaling if the filename</span>
-<span class="sd">starts with &#39;eeg&#39;, and renders each channel on its own axis with shared X.</span>
-
-<span class="sd">Args:</span>
-<span class="sd">    file_path (str | Path): Path to the CSV file (channels in columns or rows;</span>
-<span class="sd">        function transposes to channel-major).</span>
-<span class="sd">    channel_list (Iterable[int], optional): Zero-based indices of channels to</span>
-<span class="sd">        include. If empty, all channels are plotted.</span>
-
-<span class="sd">Notes:</span>
-<span class="sd">    - When `MICRO_VOLTS` is True (filename starts with &#39;eeg&#39;), data is multiplied</span>
-<span class="sd">      by 1e3 to convert mV→µV for display.</span>
-<span class="sd">    - The Y-range of each subplot is clamped to ±`AMPLITUDE_IN_MILLIVOLTS`</span>
-<span class="sd">      (interpreted as mV or µV depending on mode).</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-
-    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">channel_list</span><span class="p">]</span>
-
-
-    <span class="n">amplitude</span> <span class="o">=</span> <span class="n">AMPLITUDE_IN_MILLIVOLTS</span>
-    <span class="k">if</span> <span class="n">MICRO_VOLTS</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mf">1e3</span>
-        <span class="n">amplitude</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="mf">1e3</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-
-    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;file: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">emg_signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">)</span>
-        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">emg_signal</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Channel </span><span class="si">{</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-
-
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="view_csv.plot_channel" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">plot_channel</span>
-
-
-<a href="#view_csv.plot_channel" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_channel</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Plot a single channel from a CSV signal file.</p>
-<p>Loads and transposes the CSV at <code>file_path</code>, applies unit heuristics, and plots
-the specified 1-based <code>channel</code>. If the maximum value across channels 6–20
-(1-based) is &gt; 500, the Y-label is set to 'raw input'; otherwise:
-- If EEG filename (starts with 'eeg'), data is scaled to µV and label 'µV'
-- Else label defaults to 'mV'</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file_path</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span> | <span title="Path">Path</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Path to the CSV file.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>channel</code>
-            </td>
-            <td>
-                  <code>int, default=1</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>1-based channel index to visualize.</p>
-              </div>
-            </td>
-            <td>
-                  <code>1</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<details class="notes" open>
-  <summary>Notes</summary>
-  <ul>
-<li>Uses simple heuristics to choose the unit label; adjust for your pipeline
-  if raw counts vs. calibrated units differ.</li>
-</ul>
-</details>
-
-            <details class="quote">
-              <summary>Source code in <code>view_csv.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
@@ -2136,25 +2094,178 @@ the specified 1-based <code>channel</code>. If the maximum value across channels
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
-<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_channel</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel_list</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot multiple channels from a CSV signal file in stacked subplots.</span>
+
+<span class="sd">    Loads the CSV at ``file_path``, transposes to ``(channels, samples)``,</span>
+<span class="sd">    optionally selects a subset of channels, applies EEG µV scaling **depending</span>
+<span class="sd">    on the module-level ``MICRO_VOLTS`` flag**, and renders each channel on its</span>
+<span class="sd">    own axis with a shared X-axis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or pathlib.Path</span>
+<span class="sd">        Path to the CSV file (channels in columns or rows; function transposes</span>
+<span class="sd">        to channel-major).</span>
+<span class="sd">    channel_list : Iterable[int], optional</span>
+<span class="sd">        **0-based** indices of channels to include. If empty, all channels are</span>
+<span class="sd">        plotted.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - When ``MICRO_VOLTS`` is True, data is multiplied by ``1e3`` to convert</span>
+<span class="sd">      mV→µV for display.</span>
+<span class="sd">    - The Y-range of each subplot is clamped to</span>
+<span class="sd">      ``±AMPLITUDE_IN_MILLIVOLTS`` (interpreted as mV or µV depending on mode).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">channel_list</span><span class="p">]</span>
+
+    <span class="n">amplitude</span> <span class="o">=</span> <span class="n">AMPLITUDE_IN_MILLIVOLTS</span>
+    <span class="k">if</span> <span class="n">MICRO_VOLTS</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="n">amplitude</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="mf">1e3</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;file: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">emg_signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">)</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">emg_signal</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Channel </span><span class="si">{</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="view_csv.plot_channel" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_channel</span>
+
+
+<a href="#view_csv.plot_channel" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_channel</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Plot a single channel from a CSV signal file.</p>
+<p>Loads and transposes the CSV at <code>file_path</code>, applies unit heuristics, and
+plots the specified <strong>1-based</strong> <code>channel</code>.</p>
+<p>Unit label heuristic:
+- If the maximum value across channels 6–20 (1-based) exceeds <code>500</code>,
+  the Y-label is set to <code>"raw input"</code> (suggesting device counts).
+- Else, if <code>MICRO_VOLTS</code> is True, values are scaled to µV and label is
+  <code>"µV"</code>.
+- Otherwise, label defaults to <code>"mV"</code>.</p>
+<h4 id="view_csv.plot_channel--parameters">Parameters<a class="headerlink" href="#view_csv.plot_channel--parameters" title="Permanent link">&para;</a></h4>
+<p>file_path : str or pathlib.Path
+    Path to the CSV file.
+channel : int, default=1
+    <strong>1-based</strong> channel index to visualize.</p>
+<h4 id="view_csv.plot_channel--notes">Notes<a class="headerlink" href="#view_csv.plot_channel--notes" title="Permanent link">&para;</a></h4>
+<ul>
+<li>The heuristic is intentionally simple; adjust thresholds/logic to match
+  your acquisition pipeline (e.g., calibrated units vs. raw counts).</li>
+</ul>
+
+
+            <details class="quote">
+              <summary>Source code in <code>view_csv.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_channel</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a single channel from a CSV signal file.</span>
 
-<span class="sd">Loads and transposes the CSV at `file_path`, applies unit heuristics, and plots</span>
-<span class="sd">the specified 1-based `channel`. If the maximum value across channels 6–20</span>
-<span class="sd">(1-based) is &gt; 500, the Y-label is set to &#39;raw input&#39;; otherwise:</span>
-<span class="sd">- If EEG filename (starts with &#39;eeg&#39;), data is scaled to µV and label &#39;µV&#39;</span>
-<span class="sd">- Else label defaults to &#39;mV&#39;</span>
+<span class="sd">    Loads and transposes the CSV at ``file_path``, applies unit heuristics, and</span>
+<span class="sd">    plots the specified **1-based** ``channel``.</span>
 
-<span class="sd">Args:</span>
-<span class="sd">    file_path (str | Path): Path to the CSV file.</span>
-<span class="sd">    channel (int, default=1): 1-based channel index to visualize.</span>
+<span class="sd">    Unit label heuristic:</span>
+<span class="sd">    - If the maximum value across channels 6–20 (1-based) exceeds ``500``,</span>
+<span class="sd">      the Y-label is set to ``&quot;raw input&quot;`` (suggesting device counts).</span>
+<span class="sd">    - Else, if ``MICRO_VOLTS`` is True, values are scaled to µV and label is</span>
+<span class="sd">      ``&quot;µV&quot;``.</span>
+<span class="sd">    - Otherwise, label defaults to ``&quot;mV&quot;``.</span>
 
-<span class="sd">Notes:</span>
-<span class="sd">    - Uses simple heuristics to choose the unit label; adjust for your pipeline</span>
-<span class="sd">      if raw counts vs. calibrated units differ.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or pathlib.Path</span>
+<span class="sd">        Path to the CSV file.</span>
+<span class="sd">    channel : int, default=1</span>
+<span class="sd">        **1-based** channel index to visualize.</span>
 
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The heuristic is intentionally simple; adjust thresholds/logic to match</span>
+<span class="sd">      your acquisition pipeline (e.g., calibrated units vs. raw counts).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
     <span class="n">unit_label</span> <span class="o">=</span> <span class="s2">&quot;mV&quot;</span>
@@ -2164,15 +2275,11 @@ the specified 1-based <code>channel</code>. If the maximum value across channels
         <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mf">1e3</span>
         <span class="n">unit_label</span> <span class="o">=</span> <span class="s2">&quot;µV&quot;</span>
 
-
-
     <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">unit_label</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">channel</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-
 
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
