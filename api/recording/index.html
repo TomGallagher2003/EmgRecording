@@ -816,6 +816,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="finish">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recording.Session.finish--notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -981,17 +996,17 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#recording.Session.save_channels" class="md-nav__link">
+  <a href="#recording.Session.wrap_save_channels" class="md-nav__link">
     <span class="md-ellipsis">
-      save_channels
+      wrap_save_channels
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="save_channels">
+    <nav class="md-nav" aria-label="wrap_save_channels">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#recording.Session.save_channels--parameters" class="md-nav__link">
+  <a href="#recording.Session.wrap_save_channels--parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Parameters
     </span>
@@ -2091,14 +2106,15 @@ device, send start/stop commands, stream raw frames over TCP, decode frames into
 per-channel samples, and save EMG/EEG/counter channels with labels for
 movement/rest segments.</p>
 <p>It is designed for synchronous EMG/EEG experiments with optional counter
-channels and HDF5/CSV persistence, and its public API is documented for
-<strong>mkdocstrings</strong> so it can be included in your MkDocs site.</p>
+channels and HDF5/CSV persistence. The public API and docstrings are formatted
+for <strong>mkdocstrings</strong> so they can be included in your MkDocs site.</p>
 <h3 id="recording--overview">Overview<a class="headerlink" href="#recording--overview" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Configuration &amp; start-up</strong>: Validates config arrays, builds a device command
-  via <code>process_config</code> and sends it over TCP.</li>
+  via :func:<code>util.OTB_refactored.configuration_processing.process_config</code>, and
+  sends it over TCP.</li>
 <li><strong>Streaming &amp; decode</strong>: Pulls raw bytes, trims to whole frames, reshapes to
-  <code>(channels, samples)</code> and decodes with :func:<code>util.processing.process</code>.</li>
+  <code>(channels, samples)</code>, and decodes with :func:<code>util.processing.process</code>.</li>
 <li><strong>Labeling</strong>: Builds per-sample labels for movement vs rest.</li>
 <li><strong>Persistence</strong>: Saves channel groups (EMG/EEG/Counters) through
   :func:<code>util.file_pathing.save_channels</code>.</li>
@@ -2106,16 +2122,15 @@ channels and HDF5/CSV persistence, and its public API is documented for
 </ul>
 <h3 id="recording--notes">Notes<a class="headerlink" href="#recording--notes" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Alignment behavior</strong>: The :meth:<code>record</code> method currently trims the receive
-  buffer to an integral number of frames but does <strong>not</strong> perform header-based
-  alignment. The :meth:<code>get_record</code> method performs a simple header alignment
-  via :func:<code>util.channel_alignment.simple_alignment</code> <strong>only when EEG is
-  disabled</strong>.</li>
+<li><strong>Alignment behavior</strong>: :meth:<code>record</code> trims to integral frames and does
+  <strong>not</strong> perform header-based alignment. :meth:<code>get_record</code> performs a simple
+  header alignment via :func:<code>util.channel_alignment.simple_alignment</code> <strong>only
+  when EEG is disabled</strong>.</li>
 <li><strong>Sample tolerance</strong>: Minor sample count drift is tolerated (see
-  <code>SAMPLE_TOLERANCE</code>) and the receive buffer may be truncated to the expected
+  :data:<code>SAMPLE_TOLERANCE</code>); the receive buffer may be truncated to the expected
   byte length.</li>
-<li>This module assumes a working device connection and a correct configuration
-  produced by :func:<code>util.OTB_refactored.configuration_processing.process_config</code>.</li>
+<li>Assumes a working device connection and a correct configuration produced by
+  :func:<code>util.OTB_refactored.configuration_processing.process_config</code>.</li>
 </ul>
 <h3 id="recording--constants">Constants<a class="headerlink" href="#recording--constants" title="Permanent link">&para;</a></h3>
 <p>SAMPLE_TOLERANCE : int
@@ -2185,7 +2200,7 @@ channels and HDF5/CSV persistence, and its public API is documented for
 
 
         <p>Manage a recording session for EMG/EEG data acquisition.</p>
-<p>This class encapsulates configuration validation, SyncStation communication,
+<p>Encapsulates configuration validation, SyncStation communication,
 streaming/collection of raw bytes, decoding into channel-wise arrays, and
 saving labeled segments.</p>
 <h4 id="recording.Session--attributes">Attributes<a class="headerlink" href="#recording.Session--attributes" title="Permanent link">&para;</a></h4>
@@ -2202,7 +2217,8 @@ tot_num_chan : int | None
 recording : bool
     True while actively receiving bytes for a segment.
 emg_channels : list[int] | None
-    Indices of EMG channels within the frame (from <code>process_config</code>).
+    Indices of EMG channels within the interleaved frame
+    (from :func:<code>process_config</code>).
 id : int
     Subject/session identifier used in file names.
 dateString : str
@@ -2617,10 +2633,14 @@ ind : int
 <span class="normal">464</span>
 <span class="normal">465</span>
 <span class="normal">466</span>
-<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">:</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manage a recording session for EMG/EEG data acquisition.</span>
 
-<span class="sd">    This class encapsulates configuration validation, SyncStation communication,</span>
+<span class="sd">    Encapsulates configuration validation, SyncStation communication,</span>
 <span class="sd">    streaming/collection of raw bytes, decoding into channel-wise arrays, and</span>
 <span class="sd">    saving labeled segments.</span>
 
@@ -2639,7 +2659,8 @@ ind : int
 <span class="sd">    recording : bool</span>
 <span class="sd">        True while actively receiving bytes for a segment.</span>
 <span class="sd">    emg_channels : list[int] | None</span>
-<span class="sd">        Indices of EMG channels within the frame (from ``process_config``).</span>
+<span class="sd">        Indices of EMG channels within the interleaved frame</span>
+<span class="sd">        (from :func:`process_config`).</span>
 <span class="sd">    id : int</span>
 <span class="sd">        Subject/session identifier used in file names.</span>
 <span class="sd">    dateString : str</span>
@@ -2657,7 +2678,7 @@ ind : int
 <span class="sd">            Whether EMG channels are enabled.</span>
 <span class="sd">        use_eeg : bool</span>
 <span class="sd">            Whether EEG channels are enabled.</span>
-<span class="sd">        data_path : str or os.PathLike</span>
+<span class="sd">        data_path : str | os.PathLike</span>
 <span class="sd">            Base path where data will be persisted.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="n">use_emg</span><span class="p">,</span> <span class="n">use_eeg</span><span class="p">,</span> <span class="n">data_path</span><span class="p">)</span>
@@ -2712,6 +2733,11 @@ ind : int
 
 <span class="sd">        Mutates the configuration header to craft a stop command, sends it,</span>
 <span class="sd">        and closes the TCP connection.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This implementation preserves the current device stop behavior, which</span>
+<span class="sd">        sends only the first byte of the (mutated) header as the command.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Send the stop command to syncstation</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">18</span><span class="p">):</span>
@@ -2777,10 +2803,9 @@ ind : int
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        - Uses ``SAMPLE_TOLERANCE`` to accept minor sample count drift.</span>
-<span class="sd">        - **No header-based alignment** is performed here; the buffer is trimmed</span>
-<span class="sd">          to integral frames via modulo and (if oversized) to the expected byte</span>
-<span class="sd">          length.</span>
+<span class="sd">        - Uses :data:`SAMPLE_TOLERANCE` to accept minor sample count drift; on</span>
+<span class="sd">          tolerance path a shorter buffer is allowed (see the &quot;Allowed&quot; print).</span>
+<span class="sd">        - **No header-based alignment** is performed here by design.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">is_movement</span><span class="p">:</span> <span class="n">rec_time</span> <span class="o">=</span> <span class="n">perform_time</span> <span class="o">+</span> <span class="n">rest_time</span>
         <span class="k">else</span><span class="p">:</span> <span class="n">rec_time</span> <span class="o">=</span> <span class="n">rest_time</span>
@@ -2833,15 +2858,15 @@ ind : int
         <span class="n">exercise_group</span> <span class="o">=</span> <span class="s2">&quot;EA&quot;</span> <span class="k">if</span> <span class="n">movement</span> <span class="o">&lt;</span> <span class="mi">13</span> <span class="k">else</span> <span class="s2">&quot;EB&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EMG</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_EMG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;emg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_EMG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;emg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_EEG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;eeg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_EEG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;eeg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAVE_COUNTERS</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SYNCSTATION_COUNTER_CHANNEL</span><span class="p">],</span>
-                                         <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_COUNTER_CHANNEL</span><span class="p">]]),</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;counters&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span>
-                               <span class="n">suffix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SYNCSTATION_COUNTER_CHANNEL</span><span class="p">],</span>
+                                              <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_COUNTER_CHANNEL</span><span class="p">]]),</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;counters&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span>
+                                    <span class="n">suffix</span><span class="p">)</span>
 
         <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 
@@ -2881,7 +2906,8 @@ ind : int
     <span class="k">def</span><span class="w"> </span><span class="nf">make_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure the base data destination directory exists.</span>
 
-<span class="sd">        Creates ``config.DATA_DESTINATION_PATH`` (and parents) if missing.</span>
+<span class="sd">        Creates :data:`config.Config.DATA_DESTINATION_PATH` (and parents) if</span>
+<span class="sd">        missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dir_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">DATA_DESTINATION_PATH</span>
 
@@ -2912,8 +2938,13 @@ ind : int
             <span class="n">save_counters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAVE_COUNTERS</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">save_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">type_string</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Persist a set of channels plus labels to disk.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrap_save_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">type_string</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Persist a set of channels plus labels to disk (thin wrapper).</span>
+
+<span class="sd">        A small wrapper around :func:`util.file_pathing.save_channels` that</span>
+<span class="sd">        centralizes metadata wiring (paths, subject id, date string, HDF5 flag).</span>
+<span class="sd">        Keeping this method provides a stable seam for future changes</span>
+<span class="sd">        (e.g., retries, unit metadata, atomic writes).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2964,44 +2995,37 @@ ind : int
 <span class="sd">        -----</span>
 <span class="sd">        - Data is trimmed to whole frames; if more than expected is received,</span>
 <span class="sd">          the most recent bytes are kept.</span>
-<span class="sd">        - Implementation detail: This method includes two consecutive receive</span>
-<span class="sd">          loops; the second reinitializes the buffer and overwrites the first</span>
-<span class="sd">          capture. If unintended, consider removing the first loop.</span>
+<span class="sd">        - Alignment uses :func:`util.channel_alignment.simple_alignment` when</span>
+<span class="sd">          ``USE_EEG`` is ``False``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_buffer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
         <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="mi">10</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">rec_time</span><span class="p">:</span>
-            <span class="n">data_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_handler</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">data_temp</span><span class="p">:</span>
-                <span class="k">break</span>
-            <span class="n">data_buffer</span> <span class="o">+=</span> <span class="n">data_temp</span>
-
-        <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)</span>
-        <span class="n">expected_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="n">total_samples</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tot_num_chan</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)))</span>
-
-        <span class="n">chan_ready</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">data_buffer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>  <span class="c1"># Buffer to store the received data</span>
-
-        <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="mi">10</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
-
+        <span class="c1"># Single receive loop (duplicate removed)</span>
         <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">rec_time</span><span class="p">:</span>
             <span class="n">data_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_handler</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">data_temp</span><span class="p">:</span>
                 <span class="k">break</span>
             <span class="n">data_buffer</span> <span class="o">+=</span> <span class="n">data_temp</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)</span>
+        <span class="n">expected_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="n">total_samples</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tot_num_chan</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)))</span>
+
+        <span class="n">chan_ready</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Alignment only when EEG is disabled (unchanged behavior)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">simple_alignment</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">data_buffer</span> <span class="o">=</span> <span class="n">data_buffer</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+
+        <span class="c1"># Trim to whole frames and expected length (unchanged behavior)</span>
         <span class="n">sample_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span>
         <span class="n">remainder</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">)</span> <span class="o">%</span> <span class="n">sample_size</span>
         <span class="k">if</span> <span class="n">remainder</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
@@ -3271,14 +3295,13 @@ ind : int
     Whether EMG channels are enabled.
 use_eeg : bool
     Whether EEG channels are enabled.
-data_path : str or os.PathLike
+data_path : str | os.PathLike
     Base path where data will be persisted.</p>
 
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
-<span class="normal">101</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
@@ -3301,7 +3324,8 @@ data_path : str or os.PathLike
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_emg</span><span class="p">,</span> <span class="n">use_eeg</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
+<span class="normal">124</span>
+<span class="normal">125</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_emg</span><span class="p">,</span> <span class="n">use_eeg</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize a recording session and connect to the device.</span>
 
 <span class="sd">    Parameters</span>
@@ -3310,7 +3334,7 @@ data_path : str or os.PathLike
 <span class="sd">        Whether EMG channels are enabled.</span>
 <span class="sd">    use_eeg : bool</span>
 <span class="sd">        Whether EEG channels are enabled.</span>
-<span class="sd">    data_path : str or os.PathLike</span>
+<span class="sd">    data_path : str | os.PathLike</span>
 <span class="sd">        Base path where data will be persisted.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="n">use_emg</span><span class="p">,</span> <span class="n">use_eeg</span><span class="p">,</span> <span class="n">data_path</span><span class="p">)</span>
@@ -3362,8 +3386,7 @@ tot_num_byte : int
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
-<span class="normal">127</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
@@ -3393,7 +3416,8 @@ tot_num_byte : int
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
-<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate and send the start/configuration command to the device.</span>
 
 <span class="sd">    Validates ``DEVICE_EN``, ``EMG``, and ``MODE`` (expected 0–3), computes</span>
@@ -3447,12 +3471,14 @@ tot_num_byte : int
         <p>Send a stop command and close the socket.</p>
 <p>Mutates the configuration header to craft a stop command, sends it,
 and closes the TCP connection.</p>
+<h5 id="recording.Session.finish--notes">Notes<a class="headerlink" href="#recording.Session.finish--notes" title="Permanent link">&para;</a></h5>
+<p>This implementation preserves the current device stop behavior, which
+sends only the first byte of the (mutated) header as the command.</p>
 
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
-<span class="normal">160</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
 <span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
@@ -3465,11 +3491,22 @@ and closes the TCP connection.</p>
 <span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
-<span class="normal">173</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a stop command and close the socket.</span>
 
 <span class="sd">    Mutates the configuration header to craft a stop command, sends it,</span>
 <span class="sd">    and closes the TCP connection.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation preserves the current device stop behavior, which</span>
+<span class="sd">    sends only the first byte of the (mutated) header as the command.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Send the stop command to syncstation</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">18</span><span class="p">):</span>
@@ -3513,13 +3550,7 @@ rep : int
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
@@ -3528,7 +3559,13 @@ rep : int
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">emg_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">rep</span><span class="p">):</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">emg_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">rep</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Record one movement + following rest segment for EMG.</span>
 
 <span class="sd">    Parameters</span>
@@ -3575,20 +3612,20 @@ perform_time : float
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
 <span class="normal">199</span>
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
 <span class="normal">204</span>
-<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">record_initial_rest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">):</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">record_initial_rest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Record the initial rest period before a movement.</span>
 
 <span class="sd">    Parameters</span>
@@ -3644,22 +3681,15 @@ rep : int | None
     Repetition index for naming when <code>is_movement=True</code>.</p>
 <h5 id="recording.Session.record--notes">Notes<a class="headerlink" href="#recording.Session.record--notes" title="Permanent link">&para;</a></h5>
 <ul>
-<li>Uses <code>SAMPLE_TOLERANCE</code> to accept minor sample count drift.</li>
-<li><strong>No header-based alignment</strong> is performed here; the buffer is trimmed
-  to integral frames via modulo and (if oversized) to the expected byte
-  length.</li>
+<li>Uses :data:<code>SAMPLE_TOLERANCE</code> to accept minor sample count drift; on
+  tolerance path a shorter buffer is allowed (see the "Allowed" print).</li>
+<li><strong>No header-based alignment</strong> is performed here by design.</li>
 </ul>
 
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
 <span class="normal">216</span>
@@ -3741,7 +3771,12 @@ rep : int | None
 <span class="normal">292</span>
 <span class="normal">293</span>
 <span class="normal">294</span>
-<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_movement</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">perform_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_movement</span><span class="p">,</span> <span class="n">rest_time</span><span class="p">,</span> <span class="n">movement</span><span class="p">,</span> <span class="n">perform_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Record a single segment (movement or rest), decode, label, and save.</span>
 
 <span class="sd">    Streams raw bytes for the requested duration, trims to whole frames,</span>
@@ -3763,10 +3798,9 @@ rep : int | None
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    - Uses ``SAMPLE_TOLERANCE`` to accept minor sample count drift.</span>
-<span class="sd">    - **No header-based alignment** is performed here; the buffer is trimmed</span>
-<span class="sd">      to integral frames via modulo and (if oversized) to the expected byte</span>
-<span class="sd">      length.</span>
+<span class="sd">    - Uses :data:`SAMPLE_TOLERANCE` to accept minor sample count drift; on</span>
+<span class="sd">      tolerance path a shorter buffer is allowed (see the &quot;Allowed&quot; print).</span>
+<span class="sd">    - **No header-based alignment** is performed here by design.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">is_movement</span><span class="p">:</span> <span class="n">rec_time</span> <span class="o">=</span> <span class="n">perform_time</span> <span class="o">+</span> <span class="n">rest_time</span>
     <span class="k">else</span><span class="p">:</span> <span class="n">rec_time</span> <span class="o">=</span> <span class="n">rest_time</span>
@@ -3819,15 +3853,15 @@ rep : int | None
     <span class="n">exercise_group</span> <span class="o">=</span> <span class="s2">&quot;EA&quot;</span> <span class="k">if</span> <span class="n">movement</span> <span class="o">&lt;</span> <span class="mi">13</span> <span class="k">else</span> <span class="s2">&quot;EB&quot;</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EMG</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_EMG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;emg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_EMG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;emg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_EEG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;eeg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_EEG_CHANNELS</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;eeg&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAVE_COUNTERS</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">save_channels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SYNCSTATION_COUNTER_CHANNEL</span><span class="p">],</span>
-                                     <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_COUNTER_CHANNEL</span><span class="p">]]),</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;counters&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span>
-                           <span class="n">suffix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrap_save_channels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SYNCSTATION_COUNTER_CHANNEL</span><span class="p">],</span>
+                                          <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MUOVI_PLUS_COUNTER_CHANNEL</span><span class="p">]]),</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;counters&quot;</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span>
+                                <span class="n">suffix</span><span class="p">)</span>
 
     <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
@@ -3861,12 +3895,7 @@ no_print : bool
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">302</span>
 <span class="normal">303</span>
 <span class="normal">304</span>
 <span class="normal">305</span>
@@ -3882,7 +3911,12 @@ no_print : bool
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
-<span class="normal">318</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">receive_and_ignore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">no_print</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">receive_and_ignore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">no_print</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Passively read and discard incoming bytes for a duration.</span>
 
 <span class="sd">    Useful for flushing the socket or letting the device stream while the UI</span>
@@ -3931,15 +3965,15 @@ no_print : bool
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">325</span>
 <span class="normal">326</span>
 <span class="normal">327</span>
-<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">set_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_id</span><span class="p">):</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">set_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the current subject/session identifier.</span>
 
 <span class="sd">    Parameters</span>
@@ -3968,17 +4002,13 @@ no_print : bool
     <div class="doc doc-contents ">
 
         <p>Ensure the base data destination directory exists.</p>
-<p>Creates <code>config.DATA_DESTINATION_PATH</code> (and parents) if missing.</p>
+<p>Creates :data:<code>config.Config.DATA_DESTINATION_PATH</code> (and parents) if
+missing.</p>
 
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
 <span class="normal">336</span>
 <span class="normal">337</span>
 <span class="normal">338</span>
@@ -3986,10 +4016,17 @@ no_print : bool
 <span class="normal">340</span>
 <span class="normal">341</span>
 <span class="normal">342</span>
-<span class="normal">343</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure the base data destination directory exists.</span>
 
-<span class="sd">    Creates ``config.DATA_DESTINATION_PATH`` (and parents) if missing.</span>
+<span class="sd">    Creates :data:`config.Config.DATA_DESTINATION_PATH` (and parents) if</span>
+<span class="sd">    missing.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dir_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">DATA_DESTINATION_PATH</span>
 
@@ -4029,13 +4066,7 @@ exercise_set : str
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">351</span>
 <span class="normal">352</span>
 <span class="normal">353</span>
 <span class="normal">354</span>
@@ -4046,7 +4077,13 @@ exercise_set : str
 <span class="normal">359</span>
 <span class="normal">360</span>
 <span class="normal">361</span>
-<span class="normal">362</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_subject_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">exercise_set</span><span class="p">):</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_subject_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">exercise_set</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create (if needed) the subject directory tree for an exercise set.</span>
 
 <span class="sd">    Parameters</span>
@@ -4073,12 +4110,12 @@ exercise_set : str
 <div class="doc doc-object doc-function">
 
 
-<h3 id="recording.Session.save_channels" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">save_channels</span>
+<h3 id="recording.Session.wrap_save_channels" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">wrap_save_channels</span>
 
 
-<a href="#recording.Session.save_channels" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">save_channels</span><span class="p">(</span>
+<a href="#recording.Session.wrap_save_channels" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">wrap_save_channels</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span>
     <span class="n">labels</span><span class="p">,</span>
     <span class="n">type_string</span><span class="p">,</span>
@@ -4090,8 +4127,12 @@ exercise_set : str
 
     <div class="doc doc-contents ">
 
-        <p>Persist a set of channels plus labels to disk.</p>
-<h5 id="recording.Session.save_channels--parameters">Parameters<a class="headerlink" href="#recording.Session.save_channels--parameters" title="Permanent link">&para;</a></h5>
+        <p>Persist a set of channels plus labels to disk (thin wrapper).</p>
+<p>A small wrapper around :func:<code>util.file_pathing.save_channels</code> that
+centralizes metadata wiring (paths, subject id, date string, HDF5 flag).
+Keeping this method provides a stable seam for future changes
+(e.g., retries, unit metadata, atomic writes).</p>
+<h5 id="recording.Session.wrap_save_channels--parameters">Parameters<a class="headerlink" href="#recording.Session.wrap_save_channels--parameters" title="Permanent link">&para;</a></h5>
 <p>data : np.ndarray
     Channel-major array to save (shape: <code>[n_channels, n_samples]</code>).
 labels : np.ndarray
@@ -4108,13 +4149,7 @@ suffix : str
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">370</span>
 <span class="normal">371</span>
 <span class="normal">372</span>
 <span class="normal">373</span>
@@ -4137,8 +4172,24 @@ suffix : str
 <span class="normal">390</span>
 <span class="normal">391</span>
 <span class="normal">392</span>
-<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">type_string</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Persist a set of channels plus labels to disk.</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">wrap_save_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">type_string</span><span class="p">,</span> <span class="n">perform_time</span><span class="p">,</span> <span class="n">exercise_group</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Persist a set of channels plus labels to disk (thin wrapper).</span>
+
+<span class="sd">    A small wrapper around :func:`util.file_pathing.save_channels` that</span>
+<span class="sd">    centralizes metadata wiring (paths, subject id, date string, HDF5 flag).</span>
+<span class="sd">    Keeping this method provides a stable seam for future changes</span>
+<span class="sd">    (e.g., retries, unit metadata, atomic writes).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -4200,26 +4251,14 @@ returns the numeric data.</p>
 <ul>
 <li>Data is trimmed to whole frames; if more than expected is received,
   the most recent bytes are kept.</li>
-<li>Implementation detail: This method includes two consecutive receive
-  loops; the second reinitializes the buffer and overwrites the first
-  capture. If unintended, consider removing the first loop.</li>
+<li>Alignment uses :func:<code>util.channel_alignment.simple_alignment</code> when
+  <code>USE_EEG</code> is <code>False</code>.</li>
 </ul>
 
 
             <details class="quote">
               <summary>Source code in <code>recording.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">406</span>
 <span class="normal">407</span>
 <span class="normal">408</span>
 <span class="normal">409</span>
@@ -4280,7 +4319,11 @@ returns the numeric data.</p>
 <span class="normal">464</span>
 <span class="normal">465</span>
 <span class="normal">466</span>
-<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec_time</span><span class="p">):</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec_time</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Capture a raw segment for ``rec_time`` seconds and return decoded channels.</span>
 
 <span class="sd">    Streams bytes for the specified duration, performs simple header</span>
@@ -4301,44 +4344,37 @@ returns the numeric data.</p>
 <span class="sd">    -----</span>
 <span class="sd">    - Data is trimmed to whole frames; if more than expected is received,</span>
 <span class="sd">      the most recent bytes are kept.</span>
-<span class="sd">    - Implementation detail: This method includes two consecutive receive</span>
-<span class="sd">      loops; the second reinitializes the buffer and overwrites the first</span>
-<span class="sd">      capture. If unintended, consider removing the first loop.</span>
+<span class="sd">    - Alignment uses :func:`util.channel_alignment.simple_alignment` when</span>
+<span class="sd">      ``USE_EEG`` is ``False``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data_buffer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
     <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="mi">10</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">rec_time</span><span class="p">:</span>
-        <span class="n">data_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_handler</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">data_temp</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="n">data_buffer</span> <span class="o">+=</span> <span class="n">data_temp</span>
-
-    <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)</span>
-    <span class="n">expected_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="n">total_samples</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tot_num_chan</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)))</span>
-
-    <span class="n">chan_ready</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">data_buffer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>  <span class="c1"># Buffer to store the received data</span>
-
-    <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="mi">10</span>
-    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">True</span>
-
+    <span class="c1"># Single receive loop (duplicate removed)</span>
     <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">rec_time</span><span class="p">:</span>
         <span class="n">data_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket_handler</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">data_temp</span><span class="p">:</span>
             <span class="k">break</span>
         <span class="n">data_buffer</span> <span class="o">+=</span> <span class="n">data_temp</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">recording</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)</span>
+    <span class="n">expected_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span> <span class="o">*</span> <span class="n">total_samples</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tot_num_chan</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SAMPLE_FREQUENCY</span> <span class="o">*</span> <span class="n">rec_time</span><span class="p">)))</span>
+
+    <span class="n">chan_ready</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Alignment only when EEG is disabled (unchanged behavior)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">USE_EEG</span><span class="p">:</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">simple_alignment</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">data_buffer</span> <span class="o">=</span> <span class="n">data_buffer</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+
+    <span class="c1"># Trim to whole frames and expected length (unchanged behavior)</span>
     <span class="n">sample_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_num_byte</span>
     <span class="n">remainder</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_buffer</span><span class="p">)</span> <span class="o">%</span> <span class="n">sample_size</span>
     <span class="k">if</span> <span class="n">remainder</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
