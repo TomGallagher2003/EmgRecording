@@ -24,7 +24,7 @@ def validate_data(data, use_emg, use_eeg):
     """
 
     config = Config(use_emg, use_eeg, "")
-    if data[0] == 'skip':
+    if data[0][0] == 'skip':
         return True
     if use_emg and not zero_check(data[config.MUOVI_EMG_CHANNELS[0]]):
         return False

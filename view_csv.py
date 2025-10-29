@@ -54,10 +54,10 @@ Assumptions
 
 Example
 -------
->>> # Force EEG scaling regardless of FILENAME
->>> MICRO_VOLTS = True
->>> plot_file("eeg_data.csv", channel_list=[0, 1, 2, 3])  # channels 1–4
->>> plot_channel("emg_data.csv", channel=12)              # 1-based index
+>> # Force EEG scaling regardless of FILENAME
+>> MICRO_VOLTS = True
+>> plot_file("eeg_data.csv", channel_list=[0, 1, 2, 3])  # channels 1–4
+>> plot_channel("emg_data.csv", channel=12)              # 1-based index
 
 Notes
 -----
@@ -71,18 +71,18 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from config import Config
 matplotlib.use('TkAgg')
 
 
-FILENAME = ""                           # Set your file name here
+FILENAME = "data/2/emg/EA/csv/emg_data_29-10_2000ms_M1R1.csv"                           # Set the file name here
 SINGLE_CHANNEL_MODE = False
 CHANNEL = 12
+
+CHANNEL_LIST = [7, 11, 30]
 
 START_CHANNEL = 10
 NUM_CHANNELS = 5
 
-CHANNEL_LIST = []
 
 
 AMPLITUDE_IN_MILLIVOLTS = 1               # Only affects multi-channel mode. Adjust as necessary

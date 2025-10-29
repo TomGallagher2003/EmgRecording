@@ -11,7 +11,7 @@ This module defines a Tkinter-based application (`ExerciseApp`) that:
 import time
 import tkinter as tk
 import threading
-from empty_recording import Session
+from recording import Session
 from util.data_validation import validate_data
 from util.images import Images
 from core.ui.device_screen import build_device_screen

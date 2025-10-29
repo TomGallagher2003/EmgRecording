@@ -76,4 +76,4 @@ class Session:
         """ Returns ['skip']
                """
 
-        return np.array(['skip'])
+        return np.array([['skip']])
